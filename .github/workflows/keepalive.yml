@@ -1,0 +1,31 @@
+# 한양빌딩 하자관리 · Supabase 잠들지 않게 깨우기
+# 3일마다 한 번 Supabase에서 부재 1개를 읽습니다 (읽기만 함, 데이터는 바꾸지 않음).
+# Supabase 주소와 anon 키는 저장소의 config.js에서 자동으로 읽어 옵니다. 따로 설정할 것 없음.
+name: Supabase keepalive
+
+on:
+  schedule:
+    - cron: '17 3 */3 * *'   # 3일마다 03:17 UTC (한국 시간 12:17)
+  workflow_dispatch:          # Actions 탭에서 'Run workflow'로 바로 실행해 볼 수 있음
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read config.js and ping Supabase
+        run: |
+          URL=$(grep -oE "supabaseUrl: *'[^']+'" config.js | sed -E "s/.*'([^']+)'/\1/")
+          KEY=$(grep -oE "supabaseAnonKey: *'[^']+'" config.js | sed -E "s/.*'([^']+)'/\1/")
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then echo "config.js에서 Supabase 주소·키를 찾지 못했습니다"; exit 1; fi
+          for i in 1 2 3; do
+            AUTH=()
+            case "$KEY" in eyJ*) AUTH=(-H "Authorization: Bearer $KEY");; esac   # 예전 anon 키(JWT)일 때만
+            CODE=$(curl -s -o /tmp/out.json -w '%{http_code}' \
+              "$URL/rest/v1/docs?select=path&limit=1" \
+              -H "apikey: $KEY" "${AUTH[@]}")
+            echo "시도 $i: HTTP $CODE"; cat /tmp/out.json; echo
+            if [ "$CODE" = "200" ]; then exit 0; fi
+            sleep 20
+          done
+          echo "Supabase가 응답하지 않습니다. 대시보드에서 프로젝트가 일시 정지됐는지 확인하세요."; exit 1

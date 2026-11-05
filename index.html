@@ -1,0 +1,1970 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>한양빌딩 하자관리</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<style>
+:root{
+  --bg:#F4F3EF; --card:#FFFFFF; --ink:#1B1F24; --ink2:#5A6270; --ink3:#8B929C; --line:#E3E1DA; --line2:#EEEDE8;
+  --navy:#1F3A5F; --navy2:#2E5A8F; --blue:#2F7CF6;
+  --red:#D93A35; --redbg:#FCEBEA; --yel:#E8B400; --yelbg:#FFF6D6; --ok:#7C93AE; --okbg:#EEF2F7; --green:#2E8B57; --greenbg:#E6F4EC;
+  --r:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans KR",system-ui,sans-serif;font-size:14px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--navy2)}
+.wrap{max-width:1320px;margin:0 auto;padding:0 24px 48px}
+/* header */
+header{background:var(--navy);color:#fff}
+.hd{max-width:1320px;margin:0 auto;padding:16px 24px 0;display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 24px}
+.brand{display:flex;flex-direction:column;gap:2px;margin-bottom:14px}
+.brand small{color:#A9BAD0;font-size:12px;letter-spacing:.02em}
+.brand b{font-size:20px;font-weight:700;letter-spacing:-.01em}
+nav{display:flex;gap:4px;flex:1}
+nav a{color:#C9D5E4;text-decoration:none;padding:10px 16px;border-radius:8px 8px 0 0;font-weight:500}
+nav a:hover{color:#fff}
+nav a.on{background:var(--bg);color:var(--ink);font-weight:600}
+.hd-actions{display:flex;gap:8px;margin-bottom:12px}
+.btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:500;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:hover{border-color:#C9C6BC}
+.btn.pri{background:var(--red);border-color:var(--red);color:#fff}
+.btn.pri:hover{background:#C3312C}
+.btn.navy{background:var(--navy2);border-color:var(--navy2);color:#fff}
+.btn.ghost{background:transparent;border-color:rgba(255,255,255,.35);color:#fff}
+.btn.ghost:hover{border-color:#fff}
+.btn.sm{padding:5px 10px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.banner{margin:16px 0 0;padding:10px 14px;border-radius:8px;background:var(--yelbg);border:1px solid #F0DC94;color:#6B5300;display:none}
+.banner.show{display:block}
+/* kpi */
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:20px 0}
+.kpi{background:var(--card);border-radius:var(--r);padding:14px 16px;border:1px solid var(--line2);cursor:default}
+.kpi .l{color:var(--ink2);font-size:13px;display:flex;align-items:center;gap:6px}
+.kpi .v{font-size:30px;font-weight:700;letter-spacing:-.02em;margin-top:2px}
+.kpi .v small{font-size:14px;font-weight:500;color:var(--ink3);margin-left:4px}
+.kpi.click{cursor:pointer}.kpi.click:hover{border-color:#C9C6BC}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+/* panels */
+.grid2{display:grid;grid-template-columns:1.35fr 1fr;gap:16px}
+.panel{background:var(--card);border-radius:var(--r);border:1px solid var(--line2);padding:16px 18px}
+.panel h3{margin:0 0 2px;font-size:16px;font-weight:600}
+.panel .sub{color:var(--ink3);font-size:12.5px;margin-bottom:10px}
+.ph{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--ink2);font-size:12.5px}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.sw{width:14px;height:10px;border-radius:2px;display:inline-block}
+svg.draw{width:100%;height:auto;display:block}
+svg.draw .mem{cursor:pointer;transition:opacity .1s}
+svg.draw .mem:hover{opacity:.78}
+svg.draw .sel{stroke:var(--blue)!important;stroke-width:220!important}
+.stack{display:flex;flex-direction:column;gap:16px}
+/* tables */
+.tbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:20px 0 12px}
+.tbar .grow{flex:1}
+.seg{display:inline-flex;background:#fff;border:1px solid var(--line);border-radius:8px;padding:2px}
+.seg button{border:0;background:transparent;padding:6px 12px;border-radius:6px;cursor:pointer;color:var(--ink2)}
+.seg button.on{background:var(--navy);color:#fff}
+input.search,select.f{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 10px}
+input.search{min-width:220px}
+.tablebox{background:#fff;border:1px solid var(--line2);border-radius:var(--r);overflow:auto}
+table{border-collapse:collapse;width:100%;min-width:860px}
+th{position:sticky;top:0;background:#FAFAF7;text-align:left;font-weight:600;color:var(--ink2);font-size:12.5px;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--line2);vertical-align:top}
+tr.row{cursor:pointer}
+tr.row:hover td{background:#FAFAF7}
+td.num{font-variant-numeric:tabular-nums;color:var(--ink2)}
+.mono{font-family:ui-monospace,"SFMono-Regular",Menlo,monospace;font-size:12.5px}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.c-def{background:var(--redbg);color:var(--red)}
+.c-rep{background:var(--yelbg);color:#8A6A00}
+.c-ok{background:var(--okbg);color:#53657C}.c-chk{background:#E4EEF8;color:#2F5D8A;box-shadow:inset 0 0 0 1px #A9C3DE}.c-ver{background:#EEF2F7;color:#3E5876;box-shadow:inset 0 0 0 1px #B7C6D8}
+.s-new{background:var(--redbg);color:var(--red)}
+.s-prog{background:#E8F0FD;color:#2357B5}
+.s-done{background:var(--greenbg);color:var(--green)}
+.empty{padding:40px;text-align:center;color:var(--ink3)}
+/* recent list */
+.rlist{display:flex;flex-direction:column}
+.ritem{display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;padding:10px 0;border-top:1px solid var(--line2);cursor:pointer}
+.ritem:first-child{border-top:0}
+.ritem:hover .rt{color:var(--navy2)}
+.rt{font-weight:600}
+.rm{color:var(--ink3);font-size:12.5px;grid-column:2}
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(20,24,30,.28);opacity:0;pointer-events:none;transition:opacity .15s;z-index:20}
+.scrim.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100vw);background:#fff;transform:translateX(100%);transition:transform .2s;z-index:21;display:flex;flex-direction:column}
+.drawer.on{transform:none;box-shadow:-8px 0 30px rgba(0,0,0,.12)}
+.dh{padding:18px 20px 14px;border-bottom:1px solid var(--line2);display:flex;justify-content:space-between;gap:12px}
+.dh h2{margin:0;font-size:19px}
+.dh .k{color:var(--ink3);font-size:12.5px}
+.db{padding:16px 20px 28px;overflow:auto;flex:1}
+.x{border:0;background:transparent;font-size:22px;line-height:1;cursor:pointer;color:var(--ink3);padding:2px 6px}
+dl.kv{display:grid;grid-template-columns:96px 1fr;gap:7px 12px;margin:0 0 16px}
+dl.kv dt{color:var(--ink3);font-size:12.5px;padding-top:1px}
+dl.kv dd{margin:0;word-break:break-word}
+.sec{font-weight:600;font-size:13px;color:var(--ink2);margin:18px 0 8px;display:flex;justify-content:space-between;align-items:center}
+.steps{display:flex;gap:6px;margin:4px 0 14px}
+.steps button{flex:1;border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 6px;cursor:pointer;font-weight:500;color:var(--ink2)}
+.steps button.on.s1{background:var(--red);border-color:var(--red);color:#fff}
+.steps button.on.s2{background:#2357B5;border-color:#2357B5;color:#fff}
+.steps button.on.s3{background:var(--green);border-color:var(--green);color:#fff}
+.photos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.photos a{display:block;aspect-ratio:1;border-radius:8px;overflow:hidden;background:var(--line2)}
+.photos img{width:100%;height:100%;object-fit:cover;display:block}
+.log{list-style:none;padding:0;margin:0;border-left:2px solid var(--line);}
+.log li{padding:0 0 10px 14px;position:relative;font-size:13px}
+.log li:before{content:"";position:absolute;left:-6px;top:6px;width:10px;height:10px;border-radius:50%;background:#fff;border:2px solid var(--ink3)}
+.log .t{color:var(--ink3);font-size:12px}
+.note{display:flex;gap:6px;margin-top:8px}
+.note input{flex:1;border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+.dlist{display:flex;flex-direction:column;gap:8px}
+.dcard{border:1px solid var(--line2);border-radius:8px;padding:10px 12px;cursor:pointer}
+.dcard:hover{border-color:#C9C6BC}
+/* modal */
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:30;background:rgba(20,24,30,.35);padding:16px}
+.modal.on{display:flex}
+.mbox{background:#fff;border-radius:12px;width:min(640px,100%);max-height:calc(100vh - 32px);display:flex;flex-direction:column;box-shadow:0 20px 50px rgba(0,0,0,.2)}
+.mh{padding:18px 22px 10px;display:flex;justify-content:space-between;align-items:center}
+.mh h2{margin:0;font-size:18px}
+.mb{padding:4px 22px 8px;overflow:auto}
+.mf{padding:14px 22px 18px;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--line2)}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}
+.form label{display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--ink2);font-weight:500}
+.form .full{grid-column:1/-1}
+.form input,.form select,.form textarea{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:14px;color:var(--ink);background:#fff}
+.form textarea{min-height:76px;resize:vertical}
+.hint{color:var(--ink3);font-size:12px;font-weight:400}
+.err{color:var(--red);font-size:13px;min-height:18px;margin-top:8px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;opacity:0;transition:.2s;z-index:40;pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.tags button{border:1px solid var(--line);background:#FAFAF7;border-radius:999px;padding:2px 10px;font-size:12.5px;cursor:pointer}
+.tags button:hover{border-color:var(--navy2)}
+.prev{background:#FAFAF7;border:1px solid var(--line2);border-radius:8px;padding:12px 14px;font-size:13.5px}
+.prev b{font-weight:600}
+.detbox{border:1px solid var(--line2);border-radius:8px;background:#FCFCFA;padding:8px;cursor:zoom-in}
+svg.det{width:100%;height:auto;display:block;font-family:inherit}
+#zB svg.det{max-height:calc(100vh - 160px);max-width:780px;margin:0 auto}
+#zB img{max-width:100%;display:block;margin:0 auto}
+.hidden{display:none!important}
+@media (max-width:980px){.grid2{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:640px){.kpis{grid-template-columns:repeat(2,1fr)}.form{grid-template-columns:1fr}.hd-actions .lbl{display:none}nav a{padding:10px 10px}}
+
+/* ===== design layer v2 ===== */
+img.emb{width:46px;height:46px;flex:none;display:block;filter:drop-shadow(0 2px 6px rgba(0,0,0,.3))}
+.lg-top img.emb{width:52px;height:52px}
+.fl{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin:4px 0 10px}
+.fl .grow{flex:1}
+.fl button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 11px;cursor:pointer;color:var(--ink2);font-size:13px;font-weight:500}
+.fl button:hover{border-color:#B9C2CE}
+.fl button.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.v3dwrap{position:relative;border-radius:10px;overflow:hidden;background:linear-gradient(180deg,#F7F8FA,#ECEFF3);border:1px solid var(--line2)}
+#v3d{width:100%;height:520px}
+#v3d canvas{display:block;width:100%!important;height:100%!important}
+.v3dtip{position:absolute;display:none;pointer-events:none;background:#1B1F24;color:#fff;font-size:12px;padding:4px 8px;border-radius:6px;white-space:nowrap;z-index:2}
+.v3dmsg{position:absolute;inset:0;display:grid;place-items:center;color:var(--ink3);font-size:13px;pointer-events:none}
+.v3dmsg.hide{display:none}
+@media (max-width:640px){#v3d{height:360px}}
+:root{--bg:#F3F4F7;--card:#fff;--line:#E3E6EC;--line2:#ECEEF2;--navy:#14243B;--navy2:#2C5A92;--r:14px;--sh:0 1px 2px rgba(16,24,40,.04),0 4px 14px rgba(16,24,40,.05)}
+body{background:var(--bg)}
+header{background:#14243B;background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(135deg,#14243B 0%,#1D3557 60%,#24426A 100%);background-size:28px 28px,28px 28px,auto;position:relative}
+.hd{padding-top:18px}
+.brand{flex-direction:row;align-items:center;gap:12px}
+.brand .logo{width:40px;height:40px;border-radius:11px;background:linear-gradient(160deg,#E85A4F,#C93A33);display:grid;place-items:center;box-shadow:0 6px 16px rgba(201,58,51,.35);flex:none}
+.brand .tx{display:flex;flex-direction:column;gap:1px}
+nav a{border-radius:9px;padding:8px 14px;margin-bottom:13px}
+nav a:hover{background:rgba(255,255,255,.07)}
+nav a.on{background:rgba(255,255,255,.15);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+.hd-actions{align-items:center}
+.btn{border-radius:9px;transition:background .12s,border-color .12s,transform .05s}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:rgba(255,255,255,.06)}
+.btn.ghost:hover{background:rgba(255,255,255,.12)}
+.btn.pri{box-shadow:0 4px 12px rgba(217,58,53,.28)}
+.btn.out{background:transparent;border:0;color:#A9BAD0;padding:8px 6px}
+.btn.out:hover{color:#fff}
+/* hero */
+.hero{max-width:1320px;margin:0 auto;padding:6px 24px 22px;display:grid;grid-template-columns:1.1fr 1fr;gap:28px;align-items:end;color:#fff}
+.hero h1{margin:0;font-size:26px;font-weight:700;letter-spacing:-.02em}
+.hero .meta{display:flex;flex-wrap:wrap;gap:6px 18px;color:#B7C5D8;font-size:13px;margin-top:6px}
+.hero .meta b{color:#fff;font-weight:600}
+.health .row{display:flex;justify-content:space-between;color:#B7C5D8;font-size:12.5px;margin-bottom:7px}
+.health .row b{color:#fff;font-size:14px}
+.hbar{display:flex;height:12px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.12)}
+.hbar i{display:block;height:100%;transition:width .4s}
+.hleg{display:flex;gap:14px;margin-top:8px;font-size:12px;color:#B7C5D8}
+.hleg span{display:inline-flex;align-items:center;gap:5px}
+.hd + .hero{border-top:0}
+/* kpi */
+.kpis{margin:-2px 0 18px;position:relative;z-index:1;transform:translateY(-14px);margin-bottom:4px}
+.kpi{border:0;border-radius:var(--r);box-shadow:var(--sh);padding:16px 18px;display:flex;gap:14px;align-items:center;transition:transform .12s,box-shadow .12s}
+.kpi.click:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgba(16,24,40,.06),0 10px 24px rgba(16,24,40,.09)}
+.kpi .ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex:none}
+.kpi .v{font-size:28px;line-height:1.15}
+.kpi .l{font-size:12.5px}
+/* panels */
+.panel{border:0;border-radius:var(--r);box-shadow:var(--sh);padding:18px 20px}
+.panel h3{font-size:16.5px;display:flex;align-items:center;gap:8px}
+.panel h3 .tag{font-size:11.5px;font-weight:600;color:var(--navy2);background:#EAF1FA;border-radius:6px;padding:2px 7px}
+.legend .sw{border-radius:3px}
+.tablebox{border:0;border-radius:var(--r);box-shadow:var(--sh)}
+th{background:#F8F9FB}
+.seg{border-radius:10px;padding:3px}
+.seg button{border-radius:7px}
+.seg button.on{background:var(--navy)}
+input.search,select.f{border-radius:9px}
+.ritem{padding:12px 4px;border-radius:8px}
+.ritem:hover{background:#F8F9FB}
+.drawer{border-radius:16px 0 0 16px}
+.mbox{border-radius:16px}
+.chip{border-radius:7px}
+/* login */
+#login{position:fixed;inset:0;z-index:100;display:grid;grid-template-columns:1fr minmax(380px,440px);gap:40px;padding:36px 56px;color:#fff;background:#0b1326 url(hanyang_web.jpg) 35% 50%/cover no-repeat;transition:opacity .45s,visibility .45s,transform .45s}
+#login:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(6,11,22,.10) 0%,rgba(6,11,22,0) 40%,rgba(6,11,22,.28) 70%,rgba(6,11,22,.5) 100%),linear-gradient(0deg,rgba(6,11,22,.88) 0%,rgba(6,11,22,.35) 30%,rgba(6,11,22,0) 55%),linear-gradient(180deg,rgba(6,11,22,.55) 0%,rgba(6,11,22,0) 18%);pointer-events:none}
+#login.gone{opacity:0;visibility:hidden;transform:scale(1.02)}
+#login > *{position:relative}
+.lg-left{display:flex;flex-direction:column;justify-content:space-between;min-height:0}
+.lg-top{display:flex;align-items:center;gap:12px}
+.lg-top .nm{display:flex;flex-direction:column;line-height:1.25}
+.lg-top .nm b{font-size:15px;letter-spacing:.01em}
+.lg-top .nm small{color:#AFC0D8;font-size:11.5px;letter-spacing:.04em}
+.lg-hero .eb{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;letter-spacing:.06em;color:#F3C9A0;font-weight:600;margin-bottom:14px}
+.lg-hero .eb:before{content:"";width:26px;height:2px;background:#F3A86A;border-radius:2px}
+.lg-hero h1{font-size:76px;line-height:1;margin:0 0 14px;font-weight:700;letter-spacing:-.035em;text-shadow:0 6px 30px rgba(0,0,0,.35)}
+.lg-hero p{margin:0 0 22px;color:#D3DDEA;font-size:16px;max-width:520px;line-height:1.65}
+.lg-stats{display:flex;flex-wrap:wrap;gap:10px}
+.lg-stats span{display:flex;flex-direction:column;padding:10px 16px;border-radius:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);min-width:104px}
+.lg-stats small{font-size:11.5px;color:#AFC0D8}
+.lg-stats b{font-size:18px;font-weight:700;letter-spacing:-.01em}
+.lg-cap{margin-top:20px;font-size:11.5px;color:#8FA2BC}
+.lg-form{display:flex;align-items:center}
+.lg-card{width:100%;padding:34px 32px 26px;border-radius:22px;background:rgba(14,22,40,.52);border:1px solid rgba(255,255,255,.16);box-shadow:0 30px 80px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.12);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%)}
+.lg-card .badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#CFE0F5;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);padding:4px 10px;border-radius:999px;margin-bottom:18px}
+.lg-card .badge i{width:7px;height:7px;border-radius:50%;background:#4ADE80;box-shadow:0 0 8px #4ADE80}
+.lg-card h2{margin:0 0 6px;font-size:24px;letter-spacing:-.015em}
+.lg-card .d{color:#B9C7DA;margin:0 0 24px;font-size:14px}
+.pin{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:8px}
+.pin input{width:100%;height:68px;text-align:center;font-size:30px;font-weight:700;color:#fff;border:1.5px solid rgba(255,255,255,.2);border-radius:14px;background:rgba(255,255,255,.07);outline:none;transition:border-color .15s,box-shadow .15s,background .15s;-webkit-text-security:disc;caret-color:#F3A86A}
+.pin input:focus{border-color:#F3A86A;background:rgba(255,255,255,.12);box-shadow:0 0 0 4px rgba(243,168,106,.18)}
+.pin.bad input{border-color:#FF7A72;animation:shake .38s}
+.pin.ok input{border-color:#4ADE80;background:rgba(74,222,128,.12)}
+@keyframes shake{20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.lg-msg{min-height:22px;font-size:13px;color:#FF9C95;margin-bottom:12px}
+.lg-go{width:100%;justify-content:center;padding:14px;font-size:15px;font-weight:700;border:0;border-radius:13px;color:#1A1208;background:linear-gradient(180deg,#F7BD84,#EE9A57);box-shadow:0 10px 26px rgba(238,154,87,.35)}
+.lg-go:hover{filter:brightness(1.05)}
+.lg-note{margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.12);color:#93A5BE;font-size:12.5px;display:flex;gap:10px;align-items:flex-start}
+@media (max-width:980px){#login{grid-template-columns:1fr;padding:24px;gap:18px;background-image:url(hanyang_m.jpg);background-position:50% 45%;overflow:auto}.lg-hero h1{font-size:52px}.lg-left{gap:18vh;flex:none;justify-content:flex-start}#login{display:flex;flex-direction:column}.lg-hero p,.lg-stats,.lg-cap{display:none}.lg-form{align-items:flex-start}}
+@media (max-width:860px){.hero{grid-template-columns:1fr}}
+
+/* ===== theme v3: 노을 사진 톤 (트와일라잇 인디고 + 앰버 조명 + 따뜻한 석재) ===== */
+:root{--bg:#F6F2EC;--line:#E7E0D6;--line2:#EFE9E1;--ink:#211F2A;--ink2:#5C5866;--ink3:#8E8896;--navy:#2A2D52;--navy2:#5A4F8C;--amber:#EE9A57;--amber2:#F7BD84;--peach:#F3C9A0;--sh:0 1px 2px rgba(40,30,20,.05),0 6px 18px rgba(40,30,20,.06)}
+a{color:#7A4E9A}
+header{background-color:#1F2142;background-image:radial-gradient(ellipse 60% 120% at 100% 100%,rgba(238,154,87,.28),transparent 60%),radial-gradient(ellipse 50% 90% at 70% 120%,rgba(214,118,140,.22),transparent 65%),linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(160deg,#1A1C38 0%,#262A52 45%,#3B3768 80%,#4E3F6E 100%);background-size:auto,auto,28px 28px,28px 28px,auto}
+.brand small{color:#C7BEDD}
+.hero .meta{color:#C7BEDD}
+.health .row,.hleg{color:#C7BEDD}
+.hbar{background:rgba(255,255,255,.14)}
+nav a{color:#D5CDE6}
+nav a.on{background:rgba(255,255,255,.14);box-shadow:inset 0 0 0 1px rgba(255,226,196,.28)}
+.btn.ghost{border-color:rgba(255,226,196,.32)}
+.btn.out{color:#C7BEDD}
+.btn.pri{background:linear-gradient(180deg,#F7BD84,#EE9A57);border-color:#E98F4B;color:#2A1A0C;box-shadow:0 6px 16px rgba(238,154,87,.35);font-weight:600}
+.btn.pri:hover{background:linear-gradient(180deg,#F9C792,#F0A464)}
+.btn.navy{background:var(--navy);border-color:var(--navy)}
+.seg button.on,.fl button.on{background:var(--navy);border-color:var(--navy)}
+.panel h3 .tag{color:#7A4E9A;background:#F3ECF7}
+.kpi .v small{color:var(--ink3)}
+th{background:#FAF7F2}
+tr.row:hover td,.ritem:hover{background:#FBF7F1}
+.v3dwrap{background:linear-gradient(180deg,#FBF8F4 0%,#F3EEE7 100%);border-color:var(--line2)}
+.banner{background:#FFF3E3;border-color:#F3D3A8;color:#7A4A12}
+.pin input:focus{border-color:#F3A86A}
+.toast{background:#262A52}
+/* 로그인: 인디고-앰버 */
+#login{background-color:#1A1C38}
+#login:before{background:linear-gradient(90deg,rgba(22,20,44,.10) 0%,rgba(22,20,44,0) 40%,rgba(30,24,56,.30) 70%,rgba(30,24,56,.52) 100%),linear-gradient(0deg,rgba(20,18,40,.88) 0%,rgba(24,20,46,.35) 30%,rgba(24,20,46,0) 55%),linear-gradient(180deg,rgba(20,18,40,.45) 0%,rgba(20,18,40,0) 18%)}
+.lg-card{background:rgba(36,32,68,.50);border-color:rgba(255,222,190,.20);box-shadow:0 30px 80px rgba(10,6,24,.5),inset 0 1px 0 rgba(255,236,214,.16)}
+.lg-card .d{color:#CFC6E0}
+.lg-card .badge{color:#F6DCC0;background:rgba(255,214,170,.10);border-color:rgba(255,214,170,.22)}
+.lg-card .badge i{background:#F7BD84;box-shadow:0 0 8px #F7BD84}
+.pin input{border-color:rgba(255,226,196,.22);background:rgba(255,240,226,.07)}
+.lg-stats span{background:rgba(255,236,214,.08);border-color:rgba(255,226,196,.18)}
+.lg-stats small,.lg-top .nm small{color:#D3C7DF}
+.lg-hero p{color:#E6DCEA}
+.lg-note{color:#B7AECB;border-top-color:rgba(255,226,196,.14)}
+.lg-cap{color:#A99FBE}
+
+/* ===== v5: BIM 하자관리 고도화 ===== */
+.na{color:var(--ink3);font-style:normal;font-size:.95em}
+.na:before{content:"— ";opacity:.6}
+.demo{display:inline-block;font-size:11px;font-weight:600;color:#7A4E9A;background:#F3ECF7;border:1px dashed #C9B3DA;border-radius:5px;padding:0 6px;margin-left:4px;vertical-align:1px}
+.warnTag{display:inline-block;font-size:11px;font-weight:600;color:#8A5A00;background:#FFF3D6;border-radius:5px;padding:0 6px;margin-left:4px}
+.src{font-size:12px;color:var(--ink3);margin-top:2px}
+.c-done{background:#E3F4EA;color:#2B7A49}.c-none{background:#F0EEF2;color:#8E8896}
+.s-conf{background:#FFF0E0;color:#B5651D}.s-ver{background:#2B7A49;color:#fff}
+.i-tgt{background:#FFF6D6;color:#8A6A00}.i-prog{background:#FFE9B8;color:#8A5A00}.i-ok{background:#EEF2F7;color:#53657C}.i-bad{background:#FCEBEA;color:#D93A35}
+.sub2{font-size:11.5px;color:var(--ink3);margin-top:2px}
+.kpi .kh{font-size:11.5px;color:var(--ink3);margin-top:1px}
+.kpis{grid-template-columns:repeat(5,minmax(0,1fr))}
+.fbar{display:flex;align-items:center;gap:8px;margin:-4px 0 10px;min-height:30px}
+.fbar > div{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1}
+.fbar .fl-l{font-size:12.5px;color:var(--ink3)}
+.fbar .fchip{font-size:12.5px;background:#EFEAF6;color:#3B355E;border-radius:7px;padding:3px 9px}
+.fbar .cnt{font-size:12.5px;color:var(--ink2);font-weight:600}
+.dact{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.drawer{width:min(560px,44vw)}
+@media (max-width:1100px){.drawer{width:min(560px,100vw)}}
+/* 프로세스 */
+.proc{list-style:none;margin:2px 0 12px;padding:0;display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
+.proc li{position:relative;text-align:center;font-size:11.5px;color:var(--ink3);padding:30px 2px 0;line-height:1.3}
+.proc li i{position:absolute;top:0;left:50%;transform:translateX(-50%);width:24px;height:24px;border-radius:50%;background:#EEEAF2;color:var(--ink3);font-style:normal;font-weight:700;font-size:12px;display:grid;place-items:center;z-index:1}
+.proc li:before{content:"";position:absolute;top:11px;left:-50%;width:100%;height:2px;background:#E4DEEA}
+.proc li:first-child:before{display:none}
+.proc li.done i{background:#3FAE6A;color:#fff}.proc li.done:before{background:#3FAE6A}
+.proc li.cur i{background:#EE9A57;color:#fff;box-shadow:0 0 0 4px rgba(238,154,87,.2)}.proc li.cur{color:var(--ink);font-weight:600}.proc li.cur:before{background:#3FAE6A}
+.proc li.skip{opacity:.55}
+.proc li small{display:block;font-size:10.5px;color:var(--ink3);font-weight:400}
+.steps{flex-wrap:wrap}
+.steps button{min-width:0;font-size:13px;padding:7px 4px}
+.steps button.on.st-s-new{background:#D93A35;border-color:#D93A35;color:#fff}
+.steps button.on.st-s-conf{background:#E07B26;border-color:#E07B26;color:#fff}
+.steps button.on.st-s-prog{background:#2357B5;border-color:#2357B5;color:#fff}
+.steps button.on.st-s-done{background:#3FAE6A;border-color:#3FAE6A;color:#fff}
+.steps button.on.st-s-ver{background:#22643D;border-color:#22643D;color:#fff}
+.cm2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 6px}
+.cmb{border:1px solid var(--line2);border-radius:10px;padding:10px 12px;background:#FCFAF7}
+.cmb h4{margin:0 0 4px;font-size:12.5px;color:var(--ink2)}
+.cmb p{margin:0;font-size:13.5px}
+.dleg{display:flex;flex-direction:column;gap:3px;margin-top:6px;font-size:12.5px;color:var(--ink2)}
+.dleg i{display:inline-block;width:14px;height:10px;border-radius:2px;margin-right:6px;vertical-align:0}
+.dleg .lr{background:#F6C9C7;border:1.5px solid #D93A35}.dleg .lo{background:#FDE3C2;border:1.5px dashed #D9822B}
+.simg{display:flex;flex-wrap:wrap;gap:4px}
+.simc{border:1px solid var(--line);border-radius:6px;padding:3px 7px;font-size:11.5px;font-family:ui-monospace,Menlo,monospace;cursor:pointer;background:#fff}
+.simc.s-sim{background:#FFF6D6;border-color:#EBCB5C}.simc.s-ok{background:#E4EEF8;border-color:#A9C3DE}.simc.s-cxl{background:#F1F1F1;color:#8A8A8A;text-decoration:line-through}
+.taskc{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:0 0 8px}.taskc.open{border-color:#EBCB5C;background:#FFFCEF}.taskc .th{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px}.taskc .th .chip{margin-left:auto}
+.i-cxl{border:1px dashed #B9B9B9;background:#fff;color:#6B6B6B;border-radius:8px;padding:4px 9px;font-size:12.5px;cursor:pointer}
+.proc li.par i{border-style:dashed}.procn{margin:-4px 0 12px;font-size:12.5px}.simc.s-def{background:#FCEBEA;border-color:#E9A09D;color:#B3302C}.simc.s-done{background:#E3F4EA}
+.ph2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sec.sm{margin:10px 0 6px;font-size:12.5px}
+.insb{display:flex;flex-wrap:wrap;gap:5px}
+.insb button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 10px;font-size:12.5px;cursor:pointer}
+.insb button.on{outline:2px solid #2A2D52;outline-offset:1px;font-weight:600}
+.prev.bad{background:#FFF1F0;border-color:#F3C1BE}
+.log li.ls:before{border-color:#EE9A57;background:#FFF3E6}
+/* 3D 오버레이 */
+.v3dbadge{position:absolute;left:10px;top:10px;display:flex;flex-wrap:wrap;gap:6px;z-index:2;max-width:calc(100% - 20px)}
+.v3dbadge span{background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:8px;padding:4px 9px;font-size:12.5px;box-shadow:0 2px 6px rgba(0,0,0,.06);display:inline-flex;align-items:center;gap:5px}
+.v3dbadge .bf b{color:#2A2D52;font-size:14px}
+.v3dbadge .bi{border-left:4px solid var(--c)}
+.v3dbadge .bs{border-left:4px solid #2F7CF6}
+.v3dbadge button{border:0;background:#EFEAF6;border-radius:5px;width:18px;height:18px;line-height:16px;padding:0;cursor:pointer;color:var(--ink2)}
+.v3dleg{position:absolute;left:10px;bottom:10px;right:10px;display:flex;flex-wrap:wrap;gap:4px 6px;z-index:2;pointer-events:none}
+.v3dleg button,.v3dleg span{pointer-events:auto;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:7px;padding:3px 8px;font-size:12px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;color:var(--ink)}
+.v3dleg span{cursor:default;color:var(--ink2)}
+.v3dleg button.on{outline:2px solid #2A2D52;font-weight:600}
+.v3dleg i{width:12px;height:9px;border-radius:2px;display:inline-block}
+.v3dleg .lg-g i{background:rgba(201,205,211,.5);border:1px solid #C9CDD3}
+.v3dleg .lg-x i{background:transparent;border:2px solid #D93A35;height:8px}
+.v3dtip{line-height:1.45;white-space:normal;max-width:220px;padding:6px 9px}
+#v3d{height:560px}
+body.demo-on .wrap{padding-bottom:190px}
+.banner.show ~ #v-overview .kpis{transform:none;margin-top:14px}
+.v3dmsg:not(.hide){pointer-events:none}
+.v3dmsg span.box{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:10px;padding:10px 14px;max-width:80%;text-align:center;color:var(--ink2);box-shadow:0 4px 14px rgba(0,0,0,.08)}
+@media (min-width:1560px){body.drawer-open{padding-right:min(560px,44vw)}body.drawer-open .demobar{right:calc(min(560px,44vw) + 16px)}}
+body.drawer-open .demobar{right:calc(min(560px,44vw) + 16px)}
+@media (max-width:1100px){body.drawer-open .demobar{right:16px;left:16px}}
+@media (max-width:640px){#v3d{height:380px}.cm2,.ph2{grid-template-columns:1fr}.proc{grid-template-columns:repeat(3,1fr);row-gap:14px}}
+/* 시연 바 */
+.demobar{position:fixed;left:16px;right:16px;bottom:14px;z-index:26;margin:0;max-width:1100px;background:#fff;border:1px solid #E3D9EE;border-radius:14px;box-shadow:0 10px 30px rgba(42,45,82,.14);padding:10px 12px}
+.dm-steps{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.pvbox{margin:8px 0 4px;padding:8px 10px;border:1px dashed #3FAE6A;border-radius:10px;background:#F2FAF4}
+.pvsw{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.pvrow{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;font-size:13px}
+.pvc i{font-style:normal;color:var(--ink3)}.pvc b{color:#2E7D4F}
+.lgpw input{width:100%;height:52px;border-radius:12px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.08);color:#fff;font-size:17px;padding:0 16px;outline:none}.lgpw input:focus{border-color:#F7BD84;box-shadow:0 0 0 3px rgba(247,189,132,.25)}
+.pvins{display:flex;align-items:center;gap:6px;font-size:13px;margin-top:6px;cursor:pointer}
+.pvphoto-action{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px}
+.pvphoto{margin:14px 0 22px}.pvphoto figcaption{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}.pvphoto figcaption span,.pvphoto p,.pvphoto-note{font-size:13px;line-height:1.6;color:var(--ink2)}
+.pvimg{position:relative;width:100%;background:#F3F1F6;border:1px solid var(--line);border-radius:8px;overflow:hidden}.pvimg img{display:block;width:100%;height:100%;object-fit:contain}
+.pvimg .pvfail{display:none;position:absolute;inset:0;place-items:center;text-align:center;padding:12px;font-size:13px;color:var(--ink3)}.pvimg.fail .pvfail{display:grid}
+.pvphoto-note{padding:10px 12px;border:1px solid #E4BD7A;background:#FFF9ED;border-radius:8px;margin:0 0 4px}
+body.pv-on .modal{padding-top:44px}
+#mZoom.pvz .mbox{max-height:calc(100dvh - 60px)}
+body.pv-on{padding-top:32px}
+body.pv-on::before{content:'예시 화면 · 보수가 끝났다고 가정한 모습이며 실제 기록은 바뀌지 않았습니다';position:fixed;top:0;left:0;right:0;z-index:300;background:#2E7D4F;color:#fff;font-size:13px;font-weight:600;text-align:center;padding:6px 10px;letter-spacing:-.01em}
+.dm-steps button{border:1px solid var(--line);background:#FBF9FD;border-radius:9px;padding:6px 8px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:1px;min-width:0}
+.dm-steps button b{font-size:11px;color:#7A4E9A;letter-spacing:.04em}
+.dm-steps button span{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dm-steps button.on{background:#2A2D52;border-color:#2A2D52}.dm-steps button.on b{color:#F7BD84}.dm-steps button.on span{color:#fff}
+.dm-body{display:flex;gap:16px;align-items:flex-start;margin-top:8px}
+.dm-body > div:first-child{flex:1}
+.dm-body p{margin:2px 0 0;font-size:13.5px;color:var(--ink2)}
+.dm-body .say{font-size:12.5px;color:#7A4E9A}
+.dm-nav{display:flex;gap:6px}
+.demofab{position:fixed;left:10px;bottom:10px;z-index:25;width:30px;height:30px;border-radius:50%;border:1px solid rgba(42,45,82,.18);background:rgba(255,255,255,.7);color:#7A7F99;font-size:11px;line-height:1;cursor:pointer;opacity:.35;transition:opacity .15s}
+.demofab:hover,.demofab:focus-visible{opacity:1}
+body.demo-on .demofab{display:none}
+#bLink .ico{display:none}
+/* 연계 모달 */
+.lkLead{margin:0 0 14px;font-size:14px;color:var(--ink2)}
+.lkFlow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:8px;align-items:stretch}
+.lkN{border:1px solid var(--line);border-radius:12px;padding:12px;background:#FCFAF7;display:flex;flex-direction:column;gap:4px}
+.lkN b{font-size:14.5px}.lkN small{font-size:12px;color:var(--ink2);line-height:1.5}
+.lkN.hl{background:#F3ECF7;border-color:#D9C8E6}
+.lkA{display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11.5px;color:#7A4E9A;text-align:center;max-width:120px}
+.lkA i{font-style:normal;font-size:22px;color:#EE9A57}
+.lkBack{margin:10px 0 14px;padding:10px 12px;border:1px dashed #E0C8A8;border-radius:10px;background:#FFF8EF;font-size:13px;color:#7A4A12}
+.lkGrid{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
+.lkGrid h4{margin:0 0 6px;font-size:13.5px}
+.lkT{min-width:0;font-size:12.5px}.lkT th,.lkT td{padding:6px 8px}
+.lks{display:flex;gap:8px}.lks span{flex:1;border:1px solid var(--line2);border-radius:10px;padding:8px 10px;background:#fff}.lks b{font-size:20px}.lks small{display:block;font-size:11.5px;color:var(--ink3)}
+.lkNote{margin:10px 0 0;padding-left:18px;font-size:12.5px;color:var(--ink2)}.lkNote li{margin-bottom:4px}
+@media (max-width:1280px){.kpi{padding:14px}.kpi .v{font-size:24px}.kpi .ic{width:36px;height:36px}.hd-actions .lbl{font-size:13px}}
+@media (max-width:1200px){#bLink .lbl{display:none}#bLink .ico{display:inline}}
+@media (max-width:980px){.kpis{grid-template-columns:repeat(3,1fr)}.dm-steps{grid-template-columns:repeat(3,1fr)}.lkFlow{grid-template-columns:1fr}.lkA{max-width:none}.lkA i{transform:rotate(90deg)}.lkGrid{grid-template-columns:1fr}}
+
+/* ===== v5.1: 로그인 역할 + 모바일 ===== */
+.lgtabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:12px;background:rgba(255,240,226,.08);border:1px solid rgba(255,226,196,.16);margin-bottom:22px}
+.lgtabs button{border:0;background:transparent;color:#CFC6E0;padding:9px 6px;border-radius:9px;font-weight:600;cursor:pointer;font-size:14px}
+.lgtabs button.on{background:rgba(247,189,132,.95);color:#2A1A0C}
+.lgperm{list-style:none;margin:0 0 18px;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.lgperm li{display:flex;gap:8px;align-items:center;color:#E6DCEA}
+.lgperm li:before{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;flex:none}
+.lgperm li.y:before{content:"✓";background:rgba(74,222,128,.18);color:#86EFAC}
+.lgperm li.n{color:#A99FBE}.lgperm li.n:before{content:"×";background:rgba(255,122,114,.16);color:#FF9C95}
+.lg-go2{background:rgba(255,240,226,.14);color:#fff;box-shadow:none;border:1px solid rgba(255,226,196,.3)}
+.lg-go2:hover{background:rgba(255,240,226,.22)}
+.roleb{font-size:12px;font-weight:600;border-radius:999px;padding:4px 10px;white-space:nowrap}
+.roleb.ra{background:rgba(247,189,132,.22);color:#FFD9B3;border:1px solid rgba(247,189,132,.4)}
+.roleb.rv{background:rgba(255,255,255,.1);color:#D5CDE6;border:1px solid rgba(255,255,255,.2)}
+.roleb:empty{display:none}
+@media (max-width:760px){
+  .hd{padding:12px 14px 0;gap:8px}
+  .brand b{font-size:17px}.brand small{font-size:11px}
+  img.emb{width:38px;height:38px}
+  nav{order:3;width:100%;flex:none}
+  nav a{margin-bottom:8px;padding:7px 12px;font-size:14px}
+  .hd-actions{flex-wrap:wrap;gap:6px;margin-bottom:6px;width:100%}
+  .hd-actions .btn{padding:6px 10px;font-size:13px}
+  .hero{padding:4px 14px 30px;gap:12px}
+  .hero h1{font-size:20px}
+  .hero .meta{font-size:12px;gap:4px 12px}
+  .wrap{padding:0 12px 40px}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px}
+  .kpi{padding:12px;gap:10px;align-items:flex-start}
+  .kpi > div:last-child{min-width:0}
+  .kpi .ic{width:32px;height:32px;border-radius:9px}
+  .kpi .ic svg{width:18px;height:18px}
+  .kpi .l{font-size:12px;line-height:1.3}
+  .kpi .v{font-size:24px;white-space:nowrap}
+  .kpi .v small{font-size:12px}
+  .kpi .kh{font-size:11px;line-height:1.35}
+  .kpi:last-child:nth-child(odd){grid-column:1/-1}
+  .grid2{gap:12px}
+  .panel{padding:14px}
+  .fl{gap:4px}.fl button{padding:5px 8px;font-size:12.5px}
+  .fl .grow{flex-basis:100%;height:0}
+  .v3dleg button,.v3dleg span{font-size:11px;padding:2px 6px}
+  .v3dleg .lg-g,.v3dleg .lg-x{display:none}
+  .tbar{gap:6px}.seg{flex-wrap:wrap}.seg button{padding:6px 9px;font-size:13px}
+  input.search{min-width:0;width:100%}
+  .drawer{width:100vw;border-radius:0}
+  .dm-steps{grid-template-columns:repeat(3,1fr)}
+  .dm-body{flex-direction:column;gap:8px}
+  .demobar{left:8px;right:8px;bottom:8px;padding:8px}
+  body.demo-on .wrap{padding-bottom:260px}
+  .lg-card{padding:24px 20px 20px}
+  .pin input{height:58px;font-size:26px}
+}
+</style>
+<script src="config.js"></script>
+<script src="hj-backend.js"></script>
+</head>
+<body>
+<div id="login" role="dialog" aria-label="한양빌딩 하자관리 로그인">
+  <div class="lg-left">
+    <div class="lg-top"><img class="emb" src="hy_emblem_w.png" alt="한양대학교 엠블럼"><div class="nm"><b>한양빌딩 하자관리</b><small>한양대학교 ERICA · BIM 유지관리</small></div></div>
+    <div class="lg-hero">
+      <div class="eb">BIM 유지관리 · 하자 정보 관리 시스템</div>
+      <h1>한양빌딩</h1>
+      <p>Revit 부재 ID와 하자관리표를 하나로 연결해, 각 부재의 하자 위치와 공법 상세도, 보수 진행 상황을 한 화면에서 관리합니다.</p>
+      <div class="lg-stats"><span><small>규모</small><b>지상 7층</b></span><span><small>외곽 치수</small><b>36 × 18 m</b></span><span><small>관리 부재</small><b>98개</b></span></div>
+    </div>
+  </div>
+  <div class="lg-form">
+    <form class="lg-card" id="lgForm" autocomplete="off">
+      <div class="lgtabs" role="tablist"><button type="button" role="tab" data-mode="admin" class="on">관리자 로그인</button><button type="button" role="tab" data-mode="viewer">일반 로그인</button></div>
+      <div id="lgAdmin">
+        <h2>관리자 로그인</h2>
+        <p class="d">관리자 비밀번호 4자리를 입력해 주세요. 하자 등록·수정, 처리 단계 변경, 엑셀 가져오기를 할 수 있습니다.</p>
+        <div class="pin" id="pin">
+          <input inputmode="numeric" maxlength="1" aria-label="비밀번호 1번째 자리"><input inputmode="numeric" maxlength="1" aria-label="비밀번호 2번째 자리"><input inputmode="numeric" maxlength="1" aria-label="비밀번호 3번째 자리"><input inputmode="numeric" maxlength="1" aria-label="비밀번호 4번째 자리">
+        </div>
+        <div class="lgpw hidden" id="lgPwBox"><input type="password" id="lgPw" autocomplete="current-password" placeholder="관리자 비밀번호" aria-label="관리자 비밀번호"></div>
+        <div class="lg-msg" id="lgMsg"></div>
+        <button class="btn lg-go" type="submit">관리자로 입장 →</button>
+      </div>
+      <div id="lgViewer" class="hidden">
+        <h2>일반 로그인</h2>
+        <p class="d">비밀번호 없이 들어갑니다. 현황, 3D 모델, 하자·부재 목록, 상세도를 볼 수 있고 <b>수정은 할 수 없습니다.</b></p>
+        <ul class="lgperm"><li class="y">현황 · 3D · 상세도 보기</li><li class="y">하자 · 부재 목록 조회, 엑셀 내보내기</li><li class="n">하자 등록 · 수정 · 삭제</li><li class="n">처리 단계 · 점검 결과 변경</li></ul>
+        <button class="btn lg-go lg-go2" type="button" id="lgView">일반 사용자로 입장 →</button>
+      </div>
+      <div class="lg-note"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#93A5BE" stroke-width="2" style="flex:none"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><span>로그인 상태는 이 브라우저 창을 닫을 때까지 유지됩니다.<br>학생 프로젝트 데모이며 학교 공식 서비스가 아닙니다.</span></div>
+    </form>
+  </div>
+</div>
+<header>
+  <div class="hd">
+    <div class="brand"><img class="emb" src="hy_emblem_w.png" alt="한양대학교 엠블럼"><div class="tx"><small>한양대학교 ERICA · BIM 유지관리</small><b>한양빌딩 하자관리</b></div></div>
+    <nav id="nav">
+      <a href="#overview" data-v="overview">현황</a>
+      <a href="#defects" data-v="defects">하자 목록</a>
+      <a href="#members" data-v="members">부재 목록</a>
+    </nav>
+    <div class="hd-actions">
+      <button class="btn ghost" id="bLink" title="Revit·엑셀·Dynamo 연계 구조"><span class="lbl">데이터 연계</span><span class="ico">⇄</span></button>
+      <button class="btn ghost" id="bImport" title="하자관리표 엑셀을 불러와 부재·하자 정보를 갱신합니다"><span>⤒</span><span class="lbl">엑셀 가져오기</span></button>
+      <button class="btn ghost" id="bExport" title="Dynamo로 Revit에 넣을 수 있는 하자관리표 형식으로 내보냅니다"><span>⤓</span><span class="lbl">엑셀 내보내기</span></button>
+      <button class="btn pri" id="bNew">+ 하자 등록</button>
+      <span class="roleb" id="roleBadge"></span><button class="btn out" id="bLogout" title="로그아웃">로그아웃</button>
+    </div>
+  </div>
+  <div class="hero" id="hero">
+    <div>
+      <h1>한양빌딩 유지관리 현황</h1>
+      <div class="meta"><span>규모 <b>지상 7층</b></span><span>외곽 <b>36 × 18 m</b></span><span>관리 부재 <b id="hCnt">–</b></span><span id="hUpd"></span></div>
+    </div>
+    <div class="health">
+      <div class="row"><span>부재 상태 분포</span><span id="hPct"></span></div>
+      <div class="hbar" id="hBar"></div>
+      <div class="hleg"><span><i class="dot" style="background:#E5534B"></i>하자 발생</span><span><i class="dot" style="background:#F2C200"></i>유사 하자 점검 대상</span><span><i class="dot" style="background:#3FAE6A"></i>보수 완료(검증 대기)</span><span><i class="dot" style="background:#9FB7D3"></i>기본색 (하자 없음·이상 없음·검증 완료)</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="demobar hidden" id="demoBar"></div>
+  <button id="bDemo" class="demofab" title="시연 가이드 (Shift+D)" aria-label="시연 가이드 열기">▶</button>
+  <div class="banner" id="banner"></div>
+
+  <!-- 현황 -->
+  <section id="v-overview">
+    <div class="kpis" id="kpis"></div>
+    <div class="grid2">
+      <div class="panel v3dp">
+        <div class="ph">
+          <div><h3>3D 모델 <span class="tag" id="tagCnt">관리 부재</span></h3><div class="sub">드래그 회전 · 휠 확대 · 오른쪽 드래그 이동 · 부재를 누르면 상세 정보</div></div>
+        </div>
+        <div class="fl" id="flChips">
+          <button data-f="all" class="on">전체</button><button data-f="0">1F</button><button data-f="1">2F</button><button data-f="2">3F</button><button data-f="3">4F</button><button data-f="4">5F</button><button data-f="5">6F</button><button data-f="6">7F</button><button data-f="7">지붕</button>
+          <span class="grow"></span><button data-focus title="선택한 부재로 카메라 이동">◎ 선택 부재로</button><button data-home title="처음 시점으로">⟲ 시점 초기화</button>
+        </div>
+        <div class="v3dwrap"><div id="v3d"></div><div class="v3dbadge" id="v3dBadge"></div><div class="v3dleg" id="v3dLeg" title="누르면 해당 상태만 강조"><button data-iso="def"><i style="background:#E5534B"></i>하자 발생</button><button data-iso="sim"><i style="background:#F2C200"></i>유사 하자 점검 대상</button><button data-iso="done"><i style="background:#3FAE6A"></i>보수 완료(검증 대기)</button><button data-iso="ok"><i style="background:#BFD0E2"></i>기본색 (하자 없음·이상 없음·검증 완료)</button><span class="lg-g"><i></i>선택 외 부재(반투명)</span><span class="lg-x"><i></i>하자 윤곽(가려져도 표시)</span></div><div class="v3dtip" id="v3dTip"></div><div class="v3dmsg" id="v3dMsg">3D 모델을 불러오는 중…</div></div>
+      </div>
+      <div class="stack">
+        <div class="panel">
+          <div class="ph"><div><h3>지붕 평면</h3><div class="sub">외곽 띠가 지붕 부재 구간입니다</div></div></div>
+          <svg class="draw" id="roof" viewBox="-4800 -2400 47800 23600" role="img" aria-label="지붕 평면도"></svg>
+        </div>
+        <div class="panel">
+          <div class="ph"><h3>진행 중인 하자</h3><a href="#defects" style="font-size:13px">전체 보기</a></div>
+          <div class="rlist" id="recent"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 하자 목록 -->
+  <section id="v-defects" class="hidden">
+    <div class="tbar">
+      <div class="seg" id="fdStatus">
+        <button data-s="open" class="on">진행 중</button><button data-s="접수">접수</button><button data-s="하자 확인">하자 확인</button><button data-s="보수 진행">보수 진행</button><button data-s="보수 완료">보수 완료</button><button data-s="검증 완료">검증 완료</button><button data-s="done">완료 전체</button><button data-s="all">전체</button>
+      </div>
+      <select class="f" id="fdCat"><option value="">부재 전체</option><option>커튼월</option><option>파라펫</option><option>창호</option></select>
+      <span class="grow"></span>
+      <input class="search" id="fdQ" placeholder="하자 ID, 위치, 내용 검색">
+    </div>
+    <div class="fbar"><div id="fdBar"></div><span class="cnt" id="fdCount"></span></div>
+    <div class="tablebox"><table>
+      <thead><tr><th>하자 ID</th><th>부재 위치</th><th>부재 구분</th><th>하자 유형</th><th>하자 부위</th><th>하자 내용</th><th>발생일</th><th>처리 상태</th><th>사진</th></tr></thead>
+      <tbody id="dRows"></tbody>
+    </table></div>
+  </section>
+
+  <!-- 부재 목록 -->
+  <section id="v-members" class="hidden">
+    <div class="tbar">
+      <div class="seg" id="fmState">
+        <button data-s="" class="on">전체</button><button data-s="def">하자 발생</button><button data-s="sim">유사 하자 점검 대상</button><button data-s="done">보수 완료</button><button data-s="ver">검증 완료</button><button data-s="chk">이상 없음 확인</button><button data-s="ok">등록 하자 없음</button>
+      </div>
+      <select class="f" id="fmCat"><option value="">부재 전체</option><option>커튼월</option><option>파라펫</option><option>창호</option></select>
+      <select class="f" id="fmFloor"><option value="">층 전체</option></select>
+      <span class="grow"></span>
+      <input class="search" id="fmQ" placeholder="Mark, Element ID, 유형 검색">
+    </div>
+    <div class="fbar"><div id="fmBar"></div><span class="cnt" id="fmCount"></span></div>
+    <div class="tablebox"><table>
+      <thead><tr><th>No</th><th>부재 구분</th><th>유형 (Revit)</th><th>Element ID</th><th>부재 위치 (Mark)</th><th>층</th><th>관리 상태</th><th>진행 중 하자</th><th>상세도 번호</th><th>시방 코드</th></tr></thead>
+      <tbody id="mRows"></tbody>
+    </table></div>
+  </section>
+</div>
+
+<!-- drawer -->
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <div class="dh"><div><div class="k" id="dK"></div><h2 id="dT"></h2></div><button class="x" id="dX" aria-label="닫기">×</button></div>
+  <div class="db" id="dB"></div>
+</aside>
+
+<!-- defect form -->
+<div class="modal" id="mForm">
+  <div class="mbox">
+    <div class="mh"><h2 id="fTitle">하자 접수</h2><button class="x" data-close>×</button></div>
+    <div class="mb">
+      <form class="form" id="form" autocomplete="off">
+        <label class="full">하자 발생 부재 (Mark · 층 · Element ID)
+          <select name="eid" required></select>
+        </label>
+        <label>하자 유형
+          <select name="type" required>
+            <option>누수</option><option>실링 탈락</option><option>균열</option><option>균열·함수</option><option>결로</option><option>변형</option><option>부식</option><option>파손</option><option>기타</option>
+          </select>
+        </label>
+        <label>발생일<input type="date" name="date" required></label>
+        <label class="full">발생 위치 (하자 부위) <span class="hint">벽 속 레이어(방수층, 단열재 등)는 Revit 재료 이름과 맞추면 Dynamo가 해당 레이어만 표시합니다</span>
+          <input name="part" placeholder="예: 실링 / 방수층, 단열재" required>
+          <div class="tags" id="partTags"></div>
+        </label>
+        <label class="full">하자 내용<textarea name="desc" placeholder="예: 하부 수평 멀리언 실링 탈락, 실내측 누수 흔적" required></textarea></label>
+        <label id="stField">처리 상태
+          <select name="status"><option>접수</option><option>하자 확인</option></select>
+        </label>
+        <label>담당·업체 <span class="hint">선택</span><input name="owner" placeholder="예: OO커튼월 A/S팀"></label>
+        <label class="full" id="photoField">하자 사진 (보수 전) <span class="hint">여러 장 선택 가능 · 저장 시 올라갑니다</span>
+          <input type="file" name="photos" accept="image/png,image/jpeg,image/webp" multiple>
+        </label>
+      </form>
+      <div class="err" id="fErr"></div>
+    </div>
+    <div class="mf"><button class="btn" data-close>취소</button><button class="btn pri" id="fSave">저장</button></div>
+  </div>
+</div>
+
+<!-- import modal -->
+<div class="modal" id="mImport">
+  <div class="mbox">
+    <div class="mh"><h2>엑셀 가져오기</h2><button class="x" data-close>×</button></div>
+    <div class="mb">
+      <p style="margin:0 0 6px;color:var(--ink2)">‘하자관리표’ 시트(Element ID · 부재 위치 · 하자 ID 열)를 읽어 <b>부재 정보를 갱신</b>하고, 사이트에 없는 하자 ID는 <b>새 하자(접수)</b>로 등록합니다. 이미 있는 하자는 바꾸지 않습니다.</p>
+      <p class="hint" style="margin:0 0 10px;font-size:12.5px">백업·복원 기능이 아닙니다. 하자 처리 이력, 사진, 보수·검증 기록, 유사 부재 점검 기록은 엑셀에서 되살리지 않습니다.</p>
+      <input type="file" id="impFile" accept=".xlsx,.xlsm,.xls">
+      <div id="impPrev" style="margin-top:12px"></div>
+      <div class="err" id="impErr"></div>
+    </div>
+    <div class="mf"><button class="btn" data-close>취소</button><button class="btn navy" id="impGo" disabled>반영</button></div>
+  </div>
+</div>
+
+<!-- reason modal -->
+<div class="modal" id="mReason">
+  <div class="mbox" style="width:min(460px,100%)">
+    <div class="mh"><h2 id="rsT">사유 입력</h2><button class="x" data-close>×</button></div>
+    <div class="mb"><p id="rsD" class="hint" style="margin:0 0 10px;font-size:13px"></p><textarea id="rsI" class="f" style="width:100%;min-height:80px"></textarea><div class="err" id="rsErr"></div></div>
+    <div class="mf"><button class="btn" data-close>취소</button><button class="btn pri" id="rsOk">확인</button></div>
+  </div>
+</div>
+
+<!-- confirm modal -->
+<div class="modal" id="mConfirm">
+  <div class="mbox" style="width:min(420px,100%)">
+    <div class="mh"><h2 id="cT">확인</h2></div>
+    <div class="mb"><p id="cM" style="margin:0 0 6px"></p></div>
+    <div class="mf"><button class="btn" data-close>취소</button><button class="btn pri" id="cOk">삭제</button></div>
+  </div>
+</div>
+
+<!-- detail zoom -->
+<div class="modal" id="mZoom">
+  <div class="mbox" style="width:min(900px,100%)">
+    <div class="mh"><h2 id="zT">공법 상세도</h2><button class="x" data-close>×</button></div>
+    <div class="mb" id="zB" style="padding-bottom:20px"></div>
+  </div>
+</div>
+
+<!-- stage modal -->
+<div class="modal" id="mStage">
+  <div class="mbox" style="width:min(560px,100%)">
+    <div class="mh"><h2 id="sgT">단계 변경</h2><button class="x" data-close>×</button></div>
+    <div class="mb"><p id="sgD" class="hint" style="margin:0 0 10px;font-size:13px"></p><form class="form" id="sgF" autocomplete="off" onsubmit="return false"></form><div class="err" id="sgErr"></div></div>
+    <div class="mf"><button class="btn" data-close>취소</button><button class="btn pri" id="sgSave">상태 변경</button></div>
+  </div>
+</div>
+
+<!-- link modal -->
+<div class="modal" id="mLink">
+  <div class="mbox" style="width:min(920px,100%)">
+    <div class="mh"><h2>BIM 데이터 연계 구조</h2><button class="x" data-close>×</button></div>
+    <div class="mb">
+      <p class="lkLead">이 사이트와 Revit은 <b>자동으로 동기화되지 않습니다.</b> Revit Element ID를 공통 키로, <b>엑셀 하자관리표 파일</b>을 주고받는 방식으로 연계합니다. 아래 화살표의 각 단계는 사람이 실행합니다.</p>
+      <div class="lkFlow">
+        <div class="lkN"><b>Revit 모델</b><small>부재 · Element ID · Mark<br>공유 매개변수: 하자 상태, 하자 ID, 하자 유형, 하자 부위, 하자 내용, 점검일, 상세도 번호, 시방 코드, 상세정보 URL<br>필터: 상태별 색 표시</small></div>
+        <div class="lkA"><span>① 일람표로 Element ID·Mark 추출</span><i>→</i></div>
+        <div class="lkN"><b>엑셀 하자관리표</b><small>Element ID 기준 한 행 = 한 부재<br>하자 발생 여부 · 관리 상태 · 하자 정보</small></div>
+        <div class="lkA"><span>② 사이트 ‘엑셀 가져오기’</span><i>→</i></div>
+        <div class="lkN hl"><b>하자관리 사이트</b><small>부재·하자·점검 기록 저장<br>3D 상태 색 · 처리 단계 · 이력</small></div>
+      </div>
+      <div class="lkBack"><span>③ 사이트 ‘엑셀 내보내기’ → ④ Revit에서 Dynamo 그래프 실행 (File Path → 시트 이름 → Python → Watch) → Element ID로 부재를 찾아 매개변수 입력 → ⑤ Revit 필터가 관리 상태 값으로 색 표시</span></div>
+      <div class="lkGrid">
+        <div><h4>열 ↔ Revit 매개변수</h4><table class="lkT"><tr><th>엑셀 열</th><th>Revit</th></tr><tr><td>Element ID</td><td>부재 찾기 (키)</td></tr><tr><td>관리 상태</td><td>하자 상태</td></tr><tr><td>하자 ID · 하자 유형 · 하자 부위 · 하자 내용 · 점검일</td><td>같은 이름 매개변수</td></tr><tr><td>상세도 번호 · 시방 코드 · 상세정보 URL</td><td>같은 이름 매개변수</td></tr><tr><td>UniqueId · 재료 · 보수 상태 · 유사 점검 상태</td><td>참고용 (Dynamo는 사용 안 함)</td></tr></table></div>
+        <div><h4>현재 데이터</h4><div id="lkStats"></div>
+          <ul class="lkNote"><li>관리부재 98개(커튼월 35 · 파라펫 8 · 창호 55)는 Revit 모델 ‘한양빌딩_하자관리.rvt’의 Element ID · UniqueId와 연결되어 있습니다.</li><li>Revit UniqueId와 IFC GlobalId는 서로 다른 속성으로 따로 보관합니다. IFC GlobalId는 아직 추출하지 않았으며, 값을 임의로 만들지 않습니다.</li><li>Dynamo(v4)는 Element ID로 부재를 찾은 뒤 UniqueId·Mark가 맞는지 확인하고, 하나라도 맞지 않거나 중복·없는 부재가 있으면 아무것도 쓰지 않고 목록만 보여 줍니다. 엑셀에 있는 빈 칸은 Revit 값도 비웁니다.</li><li>Revit 필터: 하자 발생(빨강) · 유사 하자 점검 대상(노랑) · 보수 완료(초록) · 그 밖의 값(투명). 뷰 ‘하자관리 3D’, ‘하자위치 3D (투명)’, 하자별 3D 뷰 2개와 일람표 2개가 모델에 있습니다.</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* =====================================================================
+   상태 정의
+   - 하자(defect) 처리 단계: 접수 → 하자 확인 → 보수 진행 → 보수 완료 → 검증 완료
+   - 유사 부재 점검(inspection, 하자 1건 × 같은 유형 부재 1개 = 작업 1개, 기록 키 inspections/{하자ID}~{ElementID}):
+     점검 대상 → 점검 진행 → 점검 완료(이상 없음) | 점검 결과 하자 확인(→ 하자 등록으로 종료) | 점검 취소(사유 필수)
+     원인 하자의 보수·검증과 관계없이 위 결과가 입력될 때까지 작업이 남음
+   - 부재 상태(3D 색): def 하자 발생 / sim 유사 하자 점검 대상(남은 점검 작업 있음) / done 보수 완료 / chk 이상 없음 확인 / ok 등록 하자 없음
+   ===================================================================== */
+const DSTEPS = ['접수', '하자 확인', '보수 진행', '보수 완료', '검증 완료'];
+const OPEN_ST = new Set(['접수', '하자 확인', '보수 진행']);
+const normSt = s => DSTEPS.includes(s) ? s : '접수';
+const OPEN = d => OPEN_ST.has(normSt(d.status));
+const DONE = d => !OPEN(d);
+const repairLabel = s => { s = normSt(s); return s === '접수' || s === '하자 확인' ? '보수 대기' : s; };
+/* 유사 부재 점검: 하자 1건 × 같은 유형 부재 1개 = 점검 작업 1개. 하자 처리 상태와 별도로 진행되는 병행 작업 */
+const INS = ['점검 대상', '점검 진행', '점검 완료(이상 없음)', '점검 결과 하자 확인'];
+const INS_ALL = [...INS, '점검 취소'];
+const insKey = (defId, eid) => `${defId}~${eid}`;
+/* 점검 작업이 아직 끝나지 않았는가: 미점검·점검 진행, 또는 하자를 확인했지만 아직 하자로 등록하지 않음 */
+const insOpen = (status, rec) => status === '점검 대상' || status === '점검 진행' || (status === '점검 결과 하자 확인' && !(rec && rec.linked));
+const ST = {
+  def:  { label: '하자 발생',            short: '하자 발생',  color: '#D93A35', stroke: '#A82A26', chip: 'c-def'  },
+  sim:  { label: '유사 하자 점검 대상',  short: '점검 대상',  color: '#F2C200', stroke: '#B08C00', chip: 'c-rep'  },
+  done: { label: '보수 완료(검증 대기)',  short: '보수 완료',  color: '#3FAE6A', stroke: '#2B7A49', chip: 'c-done' },
+  ver:  { label: '검증 완료',            short: '검증 완료',  color: '#C9D6E5', stroke: '#8FA3BC', chip: 'c-ver'  },
+  chk:  { label: '이상 없음 확인',       short: '이상 없음',  color: '#C9D6E5', stroke: '#8FA3BC', chip: 'c-chk'  },
+  ok:   { label: '등록 하자 없음',       short: '하자 없음',  color: '#C9D6E5', stroke: '#8FA3BC', chip: 'c-ok'   },
+};
+const ST_KEYS = ['def', 'sim', 'done', 'ver', 'chk', 'ok'];
+/* 하자 유형별로 함께 점검할 상세도 구성요소 (일반 기준, 하자 부위 입력값과 별도로 주황 점선 표시) */
+const TYPE_HINT = {
+  '누수': ['실링', '가스켓', '물끊기', '방수층'], '실링 탈락': ['실링'], '균열': ['콘크리트', '유리', '방수층'],
+  '균열·함수': ['방수층', '단열재'], '결로': ['유리', '단열', '패널'], '변형': ['멀리언', '트랜섬', '프레임', '앵커'],
+  '부식': ['앵커', '두겁', '프레임', '하드웨어'], '파손': ['유리', '패널', '하드웨어'], '기타': [],
+};
+
+/* ---------- state ---------- */
+const S = { members: new Map(), defects: new Map(), insp: new Map(), details: new Map(), loadedM: false, loadedD: false, loadedI: false,
+  canWrite: undefined, me: null, names: {}, db: null, assets: null, downloads: null, user: null,
+  sel: null, drawer: null, detailMode: '', iso: null, model: null, role: null };
+const FLOORS = ['1F','2F','3F','4F','5F','6F','7F','지붕'];
+/* 편집 가능 = 관리자 로그인 + 저장소 쓰기 권한 */
+/* 예시 보기(‘만약 보수가 된다면’): 실제 데이터는 그대로 두고 화면에서만 보수 후 상태를 보여 줌 */
+const PV = { on: false, real: null, realInsp: null, scope: 'one', ins: false, stage: '보수 완료' };
+/* 쓰기 권한: undefined=확인 중(잠금), true=가능, false=불가(잠금), null=플랫폼이 알려 주지 않음 → 입력은 열고, 저장이 거부되면 읽기 전용으로 전환.
+   PIN은 화면 잠금일 뿐 서버 보안이 아니며, 실제 쓰기 허용 여부는 호스팅 플랫폼의 공유 권한이 정함 */
+const canEdit = () => S.role === 'admin' && S.canWrite !== false && S.canWrite !== undefined && !!S.db && !PV.on;
+
+function cap(name){
+  return new Promise(res => {
+    let waited = 0;
+    const tick = () => {
+      if (window.claude && typeof window.claude.use === 'function') {
+        Promise.resolve(window.claude.use(name)).then(v => res(v || null), () => res(null));
+      } else if ((waited += 150) > 10000) res(null);
+      else setTimeout(tick, 150);
+    };
+    tick();
+  });
+}
+
+/* ---------- 파생 데이터: 한 곳에서 계산해 KPI·필터·3D·목록이 같은 값을 쓰도록 ---------- */
+function insRec(defId, eid){
+  const r = S.insp.get(insKey(defId, eid)); if (r) return r;
+  const old = S.insp.get(String(eid));                       // 예전 형식(inspections/{eid}) 기록은 읽기만 함
+  return old && old.basis === defId ? old : null;
+}
+function compute(){
+  const openByE = new Map(), doneByE = new Map(), defByType = new Map();
+  const defs = [...S.defects.values()].sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')) || String(a.id).localeCompare(String(b.id)));
+  for (const d of defs) {
+    const e = String(d.eid), m = S.members.get(e);
+    const map = OPEN(d) ? openByE : doneByE; if (!map.has(e)) map.set(e, []); map.get(e).push(d);
+    if (m) { if (!defByType.has(m.type)) defByType.set(m.type, []); defByType.get(m.type).push(d); }
+  }
+  // 점검 작업: 원인 하자의 처리 상태(보수 완료·검증 완료 포함)와 관계없이, 점검 결과 입력 또는 사유 있는 취소 전까지 유지
+  const tasksByE = new Map(), tasksByD = new Map();
+  for (const m of S.members.values()) {
+    const e = String(m.eid);
+    for (const d of (defByType.get(m.type) || [])) {
+      if (String(d.eid) === e) continue;
+      const rec = insRec(d.id, e), status = rec ? (INS_ALL.includes(rec.status) ? rec.status : '점검 대상') : '점검 대상';
+      const t = { d, eid: e, rec, status, open: insOpen(status, rec) };
+      if (!tasksByE.has(e)) tasksByE.set(e, []); tasksByE.get(e).push(t);
+      if (!tasksByD.has(d.id)) tasksByD.set(d.id, []); tasksByD.get(d.id).push(t);
+    }
+  }
+  const mem = new Map();
+  for (const m of S.members.values()) {
+    const e = String(m.eid), open = openByE.get(e) || [], done = doneByE.get(e) || [], tasks = tasksByE.get(e) || [];
+    const openT = tasks.filter(t => t.open);
+    const cur = openT[0] || null;
+    let st;
+    if (open.length) st = 'def';                                             // 같은 부재에 미해결 하자 → 빨강
+    else if (openT.length) st = 'sim';                                       // 유사 부재 점검이 안 끝남 → 노랑
+    else if (done.some(d => normSt(d.status) === '보수 완료')) st = 'done';  // 보수 완료(검증 대기) → 초록
+    else if (done.length) st = 'ver';                                        // 모두 검증 완료 → 기본색 (보수 이력·사진은 유지)
+    else if (tasks.some(t => t.status === '점검 완료(이상 없음)')) st = 'chk';
+    else st = 'ok';
+    const insStatus = cur ? cur.status : tasks.length ? tasks[tasks.length - 1].status : null;
+    mem.set(e, { st, open, done, tasks, openT, insStatus, basis: cur ? cur.d : null, insDoc: cur ? cur.rec : null });
+  }
+  const cnt = { def: 0, sim: 0, done: 0, ver: 0, chk: 0, ok: 0 }; let insDone = 0, insTotal = 0;
+  mem.forEach(v => { cnt[v.st]++; if (v.tasks.length) { insTotal++; if (!v.openT.length) insDone++; } });
+  const all = [...S.defects.values()];
+  const dcnt = { open: all.filter(OPEN).length, repaired: all.filter(d => normSt(d.status) === '보수 완료').length, verified: all.filter(d => normSt(d.status) === '검증 완료').length };
+  S.model = { mem, cnt, dcnt, insDone, insTotal, tasksByD };
+  return S.model;
+}
+const M = () => S.model || compute();
+const info = eid => M().mem.get(String(eid)) || null;
+const stOf = eid => (info(eid) || {}).st || null;
+const stChip = k => k ? `<span class="chip ${ST[k].chip}">${esc(ST[k].label)}</span>` : `<span class="chip c-none">데이터 없음</span>`;
+const PRC = { '접수': 's-new', '하자 확인': 's-conf', '보수 진행': 's-prog', '보수 완료': 's-done', '검증 완료': 's-ver' };
+const prChip = s => { s = normSt(s); return `<span class="chip ${PRC[s]}">${esc(s)}</span>`; };
+const INC = { '점검 대상': 'i-tgt', '점검 진행': 'i-prog', '점검 완료(이상 없음)': 'i-ok', '점검 결과 하자 확인': 'i-bad' };
+const insChip = s => s ? `<span class="chip ${INC[s]}">${esc(s)}</span>` : '';
+const sortedMembers = () => [...S.members.values()].sort((a,b) => (a.no||999)-(b.no||999) || String(a.mark).localeCompare(String(b.mark)));
+const sortedDefects = () => [...S.defects.values()].sort((a,b) => String(b.date||'').localeCompare(String(a.date||'')) || String(b.id).localeCompare(String(a.id)));
+const fmtT = iso => { if(!iso) return ''; const d = new Date(iso); if (isNaN(d)) return iso; const p = n => String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`; };
+const today = () => { const d = new Date(), p = n => String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; };
+const hasRealId = m => /^\d+$/.test(String(m && m.eid));
+const idText = m => hasRealId(m) ? String(m.eid) : 'Revit 연결 전';
+const NA = (t = '데이터 없음') => `<span class="na">${esc(t)}</span>`;
+const who = id => id ? (S.names[id] || '사용자') : '';
+const memberName = m => `${m.cat || ''} ${m.mark || ''}`.trim();
+const demoTag = () => '';
+
+/* ---------- toast / banner ---------- */
+let tt;
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), 2800); }
+function banner(msg){ const b = $('#banner'); b.textContent = msg || ''; b.classList.toggle('show', !!msg); }
+
+/* ---------- routing ---------- */
+const VIEWS = ['overview','defects','members'];
+let curView = 'overview';
+function route(){
+  const h = location.hash.slice(1); curView = VIEWS.includes(h) ? h : 'overview';
+  VIEWS.forEach(x => $('#v-'+x).classList.toggle('hidden', x !== curView));
+  $$('#nav a').forEach(a => a.classList.toggle('on', a.dataset.v === curView));
+  $('#hero').classList.toggle('hidden', curView !== 'overview');
+  syncScrim();
+}
+window.addEventListener('hashchange', route);
+
+/* ---------- 3D 연동 ---------- */
+function draw3D(){
+  if (!window.HJ3D) return;
+  const im = new Map(); M().mem.forEach((v, e) => im.set(e, { st: v.st === 'chk' || v.st === 'ver' ? 'ok' : v.st, n: v.open.length }));
+  HJ3D.update({ members: S.members, info: im, sel: S.sel, iso: S.iso === 'chk' || S.iso === 'ver' ? 'ok' : S.iso });
+  $('#v3dMsg').classList.toggle('hide', S.members.size > 0 || !(S.loadedM));
+  if (S.loadedM && !S.members.size) { $('#v3dMsg').classList.remove('hide'); $('#v3dMsg').innerHTML = '<span class="box">부재 데이터가 없습니다. ‘엑셀 가져오기’로 하자관리표를 불러오면 3D에 부재 상태가 표시됩니다.</span>'; }
+  renderBadge();
+}
+function renderBadge(){
+  const f = window.HJ3D ? HJ3D.floor : 'all';
+  const fl = f === 'all' ? '전체 건물' : FLOORS[+f];
+  const sm = S.sel && S.members.get(String(S.sel));
+  $('#v3dBadge').innerHTML = `<span class="bf">보기 <b>${esc(fl)}</b></span>`
+    + (S.iso ? `<span class="bi" style="--c:${ST[S.iso].color}">강조 <b>${esc(ST[S.iso].label)}</b> <button data-clr="iso" title="강조 해제">×</button></span>` : '')
+    + (sm ? `<span class="bs">선택 <b>${esc(sm.mark)}</b> <button data-clr="sel" title="선택 해제">×</button></span>` : '');
+  $$('#v3dLeg [data-iso]').forEach(b => b.classList.toggle('on', b.dataset.iso === S.iso));
+  $$('#flChips button[data-f]').forEach(x => x.classList.toggle('on', x.dataset.f === String(f)));
+}
+window.HJ_openMember = (eid, from) => openMember(String(eid), { from });
+window.HJ3D_info = eid => {
+  const m = S.members.get(String(eid)); if (!m) return '데이터 없음';
+  const it = info(eid) || {};
+  const ds = (it.open || []).map(d => `${d.id} ${d.type}`).join(', ');
+  return `<b>${esc(m.mark)}</b> · ${esc(m.floor)}<br><span style="color:${ST[it.st].color}">●</span> ${esc(ST[it.st].label)}${it.st === 'sim' ? ` (점검 작업 ${it.openT.length}건 남음)` : ''}<br><span style="opacity:.75">${esc(m.type)}</span>${ds ? `<br>${esc(ds)}` : ''}`;
+};
+window.addEventListener('hj3d-ready', () => { draw3D(); });
+function setFloor(f){ if (!window.HJ3D) return; HJ3D.setFloor(f); renderBadge(); }
+function ensureVisible(eid){
+  if (!window.HJ3D) return;
+  const f = HJ3D.floorOf(eid); if (f == null) return;
+  if (HJ3D.floor !== 'all' && HJ3D.floor !== String(f)) setFloor(String(f));
+}
+function focusMember(eid){ if (!window.HJ3D) return; ensureVisible(eid); setTimeout(() => HJ3D.focus(eid), HJ3D.floor === 'all' ? 0 : 600); }
+$('#flChips').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; if (b.dataset.home !== undefined && b.hasAttribute('data-home')) { window.HJ3D && HJ3D.home(); return; } if (b.dataset.focus !== undefined && b.hasAttribute('data-focus')) { if (S.sel) focusMember(S.sel); else toast('먼저 부재를 선택해 주세요'); return; } if (b.dataset.f) setFloor(b.dataset.f); });
+$('#v3dLeg').addEventListener('click', e => { const b = e.target.closest('[data-iso]'); if (!b) return; S.iso = S.iso === b.dataset.iso ? null : b.dataset.iso; draw3D(); });
+$('#v3dBadge').addEventListener('click', e => { const b = e.target.closest('[data-clr]'); if (!b) return; if (b.dataset.clr === 'iso') { S.iso = null; draw3D(); } else closeDrawer(); });
+
+/* ---------- 지붕 평면 ---------- */
+function ppGeom(mark){ const r = /^PP-([NSEW])-(\d{2})$/.exec(mark||''); if(!r) return null; return { side: r[1], i: +r[2] }; }
+function drawRoof(){
+  const W=36000, D=18000, T=700, g=[];
+  const py = y => D - y;
+  g.push(`<rect x="0" y="0" width="${W}" height="${D}" fill="#F3EFE9" stroke="#B9B2A6" stroke-width="40"/>`);
+  g.push(`<rect x="14000" y="${py(13000)}" width="8000" height="6000" fill="none" stroke="#8E8896" stroke-width="50" stroke-dasharray="300 220"/>`);
+  g.push(`<text x="18000" y="${py(10000)+300}" text-anchor="middle" font-size="850" fill="#8E8896">코어</text>`);
+  const pins=[];
+  for (const m of S.members.values()){
+    const p = ppGeom(m.mark); if(!p) continue;
+    const it = info(m.eid); const k = it ? it.st : 'ok'; let r;
+    const dim = (S.iso && k !== S.iso && String(S.sel) !== String(m.eid)) || (S.sel && !S.iso && String(S.sel) !== String(m.eid));
+    if (p.side==='N') r = {x:(p.i-1)*12000, y:0, w:12000, h:T};
+    else if (p.side==='S') r = {x:(p.i-1)*12000, y:D-T, w:12000, h:T};
+    else if (p.side==='E') r = {x:W-T, y:T, w:T, h:D-2*T};
+    else r = {x:0, y:T, w:T, h:D-2*T};
+    g.push(`<g class="mem" data-eid="${esc(m.eid)}" opacity="${dim ? .25 : 1}"><title>${esc(m.mark)} · ${esc(ST[k].label)}</title><rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${ST[k].color}" stroke="${ST[k].stroke}" stroke-width="50" class="${S.sel===String(m.eid)?'sel':''}"/></g>`);
+    const lx = r.x + r.w/2, ly = r.y + r.h/2;
+    const lab = p.side==='N' ? [lx, -650] : p.side==='S' ? [lx, D+1300] : p.side==='E' ? [W+500, D/2] : [-500, D/2];
+    const anchor = p.side==='E' ? 'start' : p.side==='W' ? 'end' : 'middle';
+    g.push(`<text x="${lab[0]}" y="${lab[1]+300}" text-anchor="${anchor}" font-size="780" fill="#5C5866">${esc(m.mark)}</text>`);
+    if (k==='def') pins.push({x:lx, y:ly, n:it.open.length});
+  }
+  pins.forEach(p => g.push(`<g pointer-events="none"><circle cx="${p.x}" cy="${p.y}" r="900" fill="#fff" stroke="#A82A26" stroke-width="160"/><text x="${p.x}" y="${p.y+380}" text-anchor="middle" font-size="1050" font-weight="700" fill="#A82A26">${p.n}</text></g>`));
+  g.push(`<g transform="translate(41700,2600)"><path d="M0,-1600 L700,700 L0,250 L-700,700 Z" fill="#2A2D52"/><text x="0" y="1900" text-anchor="middle" font-size="900" font-weight="700" fill="#2A2D52">N</text></g>`);
+  $('#roof').innerHTML = g.join('');
+}
+$('#roof').addEventListener('click', e => { const g = e.target.closest('.mem'); if (g) openMember(g.dataset.eid, { from: 'roof' }); });
+
+/* ---------- render ---------- */
+const ICON = {
+  all: '<path stroke="#5A4F8C" d="M4 21V5l8-3v19M12 21V8l8 3v10M2 21h20"/>',
+  def: '<path stroke="#D93A35" d="M12 3 2 20h20L12 3zM12 10v4M12 17.5v.01"/>',
+  sim: '<path stroke="#B08C00" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM21 21l-5-5M8 11h6"/>',
+  open: '<path stroke="#2357B5" d="M9 4h6M12 2v2M5 8h14v13H5zM9 13h6M9 17h4"/>',
+  done: '<path stroke="#2B7A49" d="M20 6 9 17l-5-5"/>',
+};
+const kpiIc = (k, bg) => `<div class="ic" style="background:${bg}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON[k]}</svg></div>`;
+function render(){
+  compute();
+  const { cnt, dcnt, insDone, insTotal } = M();
+  const loading = !(S.loadedM && S.loadedD && S.loadedI);
+  const v = n => loading ? '–' : n;
+  const act = (view, key) => curView === view && ((view === 'members' && fm.s === key) || (view === 'defects' && fd.s === key)) ? ' active' : '';
+  $('#kpis').innerHTML = `
+    <div class="kpi click${act('members','')}" data-go="members:" title="전체 부재 목록 보기">${kpiIc('all','#F1EDF7')}<div><div class="l">전체 부재</div><div class="v">${v(S.members.size)}<small>개</small></div><div class="kh">커튼월·파라펫·창호</div></div></div>
+    <div class="kpi click" data-go="members:def" title="하자 발생 부재만 보기">${kpiIc('def','#FCEBEA')}<div><div class="l">하자 발생 부재</div><div class="v" style="color:var(--red)">${v(cnt.def)}<small>개</small></div><div class="kh">진행 중 하자 ${v(dcnt.open)}건</div></div></div>
+    <div class="kpi click" data-go="members:sim" title="유사 하자 점검 대상만 보기">${kpiIc('sim','#FFF6D6')}<div><div class="l">유사 하자 점검 대상</div><div class="v" style="color:#9A7A00">${v(cnt.sim)}<small>개</small></div><div class="kh">같은 유형 · 점검 끝난 부재 ${v(insDone)}/${v(insTotal)}</div></div></div>
+    <div class="kpi click" data-go="defects:open" title="진행 중 하자 목록">${kpiIc('open','#E8F0FD')}<div><div class="l">진행 중 하자</div><div class="v">${v(dcnt.open)}<small>건</small></div><div class="kh">접수·하자 확인·보수 진행</div></div></div>
+    <div class="kpi click" data-go="defects:보수 완료" title="보수 완료(검증 대기) 하자 목록">${kpiIc('done','#E6F4EC')}<div><div class="l">보수 완료 · 검증 대기</div><div class="v" style="color:#2B7A49">${v(dcnt.repaired)}<small>건</small></div><div class="kh">검증 완료 ${v(dcnt.verified)}건 · 기본색으로 표시</div></div></div>`;
+  const tot = S.members.size || 1;
+  $('#hCnt').textContent = loading ? '–' : S.members.size + '개';
+  if (!loading) { const cc = c => [...S.members.values()].filter(m => m.cat === c).length; $('#tagCnt').textContent = `커튼월 ${cc('커튼월')} · 파라펫 ${cc('파라펫')} · 창호 ${cc('창호')}`; }
+  $('#hBar').innerHTML = loading || !S.members.size ? '' : ST_KEYS.map(k => `<i style="width:${cnt[k]/tot*100}%;background:${k==='ok'?'#9FB7D3':k==='chk'?'#7FA3C9':k==='ver'?'#AFC2D8':ST[k].color}" title="${ST[k].label} ${cnt[k]}개"></i>`).join('');
+  $('#hPct').innerHTML = loading || !S.members.size ? '' : `하자·점검 대상 아님 <b>${Math.round((cnt.ok + cnt.chk + cnt.ver)/tot*100)}%</b>`;
+  const lastU = [...S.defects.values()].map(d => d.updatedAt || '').sort().pop();
+  $('#hUpd').innerHTML = lastU ? `최근 갱신 <b>${esc(fmtT(lastU))}</b>` : '';
+  draw3D(); drawRoof();
+  const rec = sortedDefects().filter(OPEN).slice(0,6);
+  $('#recent').innerHTML = rec.length ? rec.map(d => {
+    const m = S.members.get(String(d.eid)) || {};
+    return `<div class="ritem" data-did="${esc(d.id)}"><span class="mono" style="color:var(--ink2)">${esc(d.id)}</span><span class="rt">${esc(m.mark||d.eid)} · ${esc(d.type)}</span>${prChip(d.status)}<span class="rm">${esc(d.part)} — ${esc(d.desc)}</span></div>`;
+  }).join('') : `<div class="empty" style="padding:18px">${loading ? '불러오는 중…' : S.defects.size ? '진행 중인 하자가 없습니다 (모두 보수 완료)' : '등록된 하자가 없습니다'}</div>`;
+  renderDefects(); renderMembers();
+  const eb = $('#banner'); if (S.db && S.loadedM && !S.members.size) { banner('아직 등록된 부재가 없습니다. 오른쪽 위 ‘엑셀 가져오기’로 하자관리표를 불러와 주세요.'); eb.dataset.empty = '1'; } else if (eb.dataset.empty) { banner(''); delete eb.dataset.empty; }
+  if (S.drawer) S.drawer.kind === 'm' ? openMember(S.drawer.id, { refresh: true }) : openDefect(S.drawer.id, { refresh: true });
+  if (demo.on) renderDemo();
+}
+
+/* ---------- 목록·필터 ---------- */
+const fd = { s:'open', cat:'', q:'' }, fm = { s:'', cat:'', floor:'', q:'' };
+const FD_LABEL = { open: '진행 중', done: '보수 완료·검증 완료', all: '전체' };
+function filterBar(el, parts, clr){
+  const on = parts.filter(Boolean);
+  el.innerHTML = on.length ? `<span class="fl-l">현재 필터</span>${on.map(p => `<span class="fchip">${p}</span>`).join('')}<button class="btn sm" data-clr="${clr}">필터 초기화</button>` : `<span class="fl-l">필터 없음 · 전체 표시</span>`;
+}
+function renderDefects(){
+  const q = fd.q.trim().toLowerCase();
+  const rows = sortedDefects().filter(d => {
+    const s = normSt(d.status);
+    if (fd.s === 'open' && !OPEN(d)) return false;
+    if (fd.s === 'done' && !DONE(d)) return false;
+    if (!['open','done','all'].includes(fd.s) && s !== fd.s) return false;
+    const m = S.members.get(String(d.eid)) || {};
+    if (fd.cat && m.cat !== fd.cat) return false;
+    if (q && ![d.id, m.mark, d.type, d.part, d.desc, d.eid].join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  $('#dRows').innerHTML = rows.length ? rows.map(d => {
+    const m = S.members.get(String(d.eid)) || {};
+    return `<tr class="row" data-did="${esc(d.id)}"><td class="mono">${esc(d.id)}</td><td><b>${esc(m.mark||'-')}</b><div class="mono" style="color:var(--ink3)">${esc(idText(m.eid ? m : d))}</div></td><td>${esc(m.cat||'')}</td><td>${esc(d.type)}</td><td>${esc(d.part)}</td><td style="max-width:300px">${esc(d.desc)}</td><td class="num">${esc(d.date)}</td><td>${prChip(d.status)}<div class="sub2">${esc(repairLabel(d.status))}</div></td><td class="num">${((d.photos||[]).length + (d.photosAfter||[]).length) || ''}</td></tr>`;
+  }).join('') : `<tr><td colspan="9" class="empty">${!S.loadedD ? '불러오는 중…' : S.defects.size ? '조건에 맞는 하자가 없습니다' : '등록된 하자가 없습니다'}</td></tr>`;
+  $$('#fdStatus button').forEach(x => x.classList.toggle('on', x.dataset.s === fd.s));
+  filterBar($('#fdBar'), [fd.s !== 'all' ? `진행 상태: <b>${esc(FD_LABEL[fd.s] || fd.s)}</b>` : '', fd.cat ? `부재: <b>${esc(fd.cat)}</b>` : '', fd.q ? `검색: <b>${esc(fd.q)}</b>` : ''], 'fd');
+  $('#fdCount').textContent = `${rows.length}건`;
+}
+function renderMembers(){
+  const q = fm.q.trim().toLowerCase();
+  const rows = sortedMembers().filter(m => {
+    const it = info(m.eid);
+    if (fm.s && (!it || it.st !== fm.s)) return false;
+    if (fm.cat && m.cat !== fm.cat) return false;
+    if (fm.floor && m.floor !== fm.floor) return false;
+    if (q && ![m.mark, m.eid, m.type].join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  });
+  $('#mRows').innerHTML = rows.length ? rows.map(m => {
+    const it = info(m.eid) || {};
+    return `<tr class="row" data-eid="${esc(m.eid)}"><td class="num">${esc(m.no)}</td><td>${esc(m.cat)}</td><td>${esc(m.type)}</td><td class="mono">${hasRealId(m) ? esc(m.eid) : NA('Revit 연결 전')}</td><td><b>${esc(m.mark)}</b></td><td>${esc(m.floor)}</td><td>${stChip(it.st)}${it.st === 'sim' ? `<div class="sub2">점검 작업 ${it.openT.length}건 · ${esc(it.insStatus)}</div>` : ''}</td><td class="mono">${(it.open||[]).map(d=>esc(d.id)).join('<br>') || ''}</td><td>${m.detail ? esc(m.detail) : NA()}</td><td style="font-size:12.5px">${m.spec ? esc(m.spec) : NA()}</td></tr>`;
+  }).join('') : `<tr><td colspan="10" class="empty">${!S.loadedM ? '불러오는 중…' : S.members.size ? '조건에 맞는 부재가 없습니다' : '부재 데이터가 없습니다'}</td></tr>`;
+  const fl = $('#fmFloor'); if (fl.options.length === 1) FLOORS.forEach(f => fl.add(new Option(f, f)));
+  $$('#fmState button').forEach(x => x.classList.toggle('on', x.dataset.s === fm.s));
+  filterBar($('#fmBar'), [fm.s ? `관리 상태: <b>${esc(ST[fm.s].label)}</b>` : '', fm.cat ? `부재: <b>${esc(fm.cat)}</b>` : '', fm.floor ? `층: <b>${esc(fm.floor)}</b>` : '', fm.q ? `검색: <b>${esc(fm.q)}</b>` : ''], 'fm');
+  $('#fmCount').textContent = `${rows.length}개`;
+}
+$('#fdStatus').addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; fd.s = b.dataset.s; renderDefects(); });
+$('#fdCat').onchange = e => { fd.cat = e.target.value; renderDefects(); };
+$('#fdQ').oninput = e => { fd.q = e.target.value; renderDefects(); };
+function setMState(s){ fm.s = s; renderMembers(); }
+$('#fmState').addEventListener('click', e => { const b = e.target.closest('button'); if(b) setMState(b.dataset.s); });
+$('#fmCat').onchange = e => { fm.cat = e.target.value; renderMembers(); };
+$('#fmFloor').onchange = e => { fm.floor = e.target.value; renderMembers(); };
+$('#fmQ').oninput = e => { fm.q = e.target.value; renderMembers(); };
+document.addEventListener('click', e => {
+  const b = e.target.closest('.fbar [data-clr]'); if (!b) return;
+  if (b.dataset.clr === 'fd') { Object.assign(fd, { s: 'all', cat: '', q: '' }); $('#fdCat').value = ''; $('#fdQ').value = ''; renderDefects(); }
+  else { Object.assign(fm, { s: '', cat: '', floor: '', q: '' }); $('#fmCat').value = ''; $('#fmFloor').value = ''; $('#fmQ').value = ''; renderMembers(); }
+});
+$('#kpis').addEventListener('click', e => {
+  const k = e.target.closest('[data-go]'); if(!k) return; const [v, s] = k.dataset.go.split(':');
+  if (v === 'members') { Object.assign(fm, { s: s || '', cat: '', floor: '', q: '' }); $('#fmCat').value = ''; $('#fmFloor').value = ''; $('#fmQ').value = ''; renderMembers(); }
+  else { Object.assign(fd, { s: s || 'open', cat: '', q: '' }); $('#fdCat').value = ''; $('#fdQ').value = ''; renderDefects(); }
+  location.hash = v;
+});
+$('#dRows').addEventListener('click', e => { const r = e.target.closest('tr[data-did]'); if (r) openDefect(r.dataset.did); });
+$('#mRows').addEventListener('click', e => { const r = e.target.closest('tr[data-eid]'); if (r) openMember(r.dataset.eid); });
+$('#recent').addEventListener('click', e => { const r = e.target.closest('[data-did]'); if (r) openDefect(r.dataset.did, { focus: true }); });
+
+/* ---------- drawer ---------- */
+function syncScrim(){ const on = $('#drawer').classList.contains('on') && curView !== 'overview'; $('#scrim').classList.toggle('on', on); }
+function showDrawer(on){ document.body.classList.toggle('drawer-open', on); $('#drawer').classList.toggle('on', on); $('#drawer').setAttribute('aria-hidden', on?'false':'true'); syncScrim(); }
+function closeDrawer(){ S.drawer = null; S.sel = null; showDrawer(false); draw3D(); drawRoof(); if (demo.on) renderDemo(); }
+$('#dX').onclick = closeDrawer; $('#scrim').onclick = closeDrawer;
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if ($('.modal.on')) $$('.modal.on').forEach(m => m.classList.remove('on')); else if (S.drawer) closeDrawer(); } });
+function safeUrl(u){ try { const x = new URL(u); return /^https?:$/.test(x.protocol) ? x.href : '#'; } catch { return '#'; } }
+const keepScroll = (refresh, fn) => { const y = $('#dB').scrollTop; fn(); if (refresh) $('#dB').scrollTop = y; else $('#dB').scrollTop = 0; };
+
+function specBlock(m){
+  if (!m.spec) return NA();
+  const chk = '';   // ‘번호 확인 필요’ 표시는 사용자 요청으로 숨김 (데이터의 specCheck 값은 보존)
+  return `${esc(m.spec)}${chk}<div class="src">출처: 하자관리표 ‘시방 코드’ 열${m.url ? ` · 원문 확인 <a href="${esc(safeUrl(m.url))}" target="_blank" rel="noopener">${esc(m.url.replace(/^https?:\/\//,''))}</a>` : ''}</div>`;
+}
+function bimInfo(m){
+  return `<dl class="kv">
+      <dt>부재명</dt><dd>${esc(memberName(m))} <span class="hint">(구분 + Mark)</span></dd>
+      <dt>Element ID</dt><dd class="mono">${hasRealId(m) ? esc(m.eid) : `${NA('Revit 연결 전')} <span class="hint">임시 키 ${esc(m.eid)}</span>`}</dd>
+      <dt>Revit UniqueId</dt><dd class="mono" style="word-break:break-all">${m.uniqueId ? esc(m.uniqueId) : NA('데이터 없음')}<div class="hint">한양빌딩_하자관리.rvt(11/5 재구축 모델)에서 추출한 값</div></dd>
+      <dt>IFC GlobalId</dt><dd class="mono">${m.ifcGuid ? esc(m.ifcGuid) : NA('추출하지 않음')}</dd>
+      <dt>부재 유형</dt><dd>${esc(m.type || '')}</dd>
+      <dt>층</dt><dd>${esc(m.floor || '')}</dd>
+      <dt>재료</dt><dd>${m.material ? esc(m.material) : NA()}</dd>
+      <dt>상세도 번호</dt><dd>${m.detail ? esc(m.detail) : NA()}</dd>
+      <dt>시방 코드</dt><dd>${specBlock(m)}</dd>
+    </dl>`;
+}
+function insEditor(m, it){
+  if (!it || !it.tasks || !it.tasks.length) return '';
+  const W = canEdit();
+  return `<div class="sec" id="secIns"><span>유사 부재 점검 · 작업 ${it.tasks.length}건</span>${it.openT.length ? `<span class="hint">남은 작업 ${it.openT.length}건</span>` : '<span class="hint">모두 끝남</span>'}</div>
+    <div class="prev" style="margin-bottom:10px">같은 유형(<b>${esc(m.type)}</b>)의 다른 부재에 하자가 있어 점검 대상이 되었습니다. <b>실제 하자로 판정된 것은 아니며</b>, 원인 하자가 보수·검증되어도 점검 결과를 입력하거나 사유를 남겨 취소할 때까지 작업이 남아 있습니다.</div>
+    ${it.tasks.map(t => { const bm = S.members.get(String(t.d.eid)); const key = insKey(t.d.id, m.eid); return `<div class="taskc${t.open ? ' open' : ''}">
+      <div class="th"><a href="#" data-od="${esc(t.d.id)}">${esc(t.d.id)}</a> <span class="hint">${esc(bm ? bm.mark : '')} · ${esc(t.d.type)} · 원인 하자 ${esc(normSt(t.d.status))}</span>${insChip(t.status)}</div>
+      ${W ? `<div class="insb">${INS.map(x => `<button class="${INC[x]}${t.status===x?' on':''}" data-ins="${esc(x)}" data-key="${esc(key)}">${esc(x)}</button>`).join('')}${t.open ? `<button class="i-cxl" data-ins="점검 취소" data-key="${esc(key)}">점검 취소…</button>` : ''}</div>` : ''}
+      ${t.rec && t.rec.note ? `<div class="hint" style="margin-top:4px">메모: ${esc(t.rec.note)} · ${esc(fmtT(t.rec.at))}</div>` : ''}
+      ${t.status === '점검 결과 하자 확인' ? (t.rec && t.rec.linked ? `<div class="hint" style="margin-top:4px">등록된 하자: <a href="#" data-od="${esc(t.rec.linked)}">${esc(t.rec.linked)}</a></div>` : `<div class="prev bad" style="margin-top:6px">점검에서 하자가 확인되었습니다. 하자를 등록하면 이 작업이 끝나고 부재가 <b>하자 발생</b>(빨강)이 됩니다. ${W ? `<button class="btn sm pri" data-insreg="${esc(key)}">하자 등록</button>` : ''}</div>`) : ''}
+    </div>`; }).join('')}`;
+}
+
+function openMember(eid, opt = {}){
+  const m = S.members.get(String(eid)); if (!m) return;
+  S.drawer = { kind:'m', id:String(eid) }; S.sel = String(eid);
+  const it = info(eid) || { st: 'ok', open: [], done: [] };
+  const ds = [...S.defects.values()].filter(d => String(d.eid) === String(eid)).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  const W = canEdit();
+  $('#dK').textContent = `${m.cat} · ${m.type}`;
+  $('#dT').innerHTML = `${esc(m.mark)} ${stChip(it.st)}`;
+  keepScroll(opt.refresh, () => { $('#dB').innerHTML = `
+    <div class="dact"><button class="btn sm" id="dFocus">◎ 3D에서 이 부재로 이동</button></div>
+    <div class="sec" style="margin-top:4px"><span>BIM 부재 정보</span></div>
+    ${bimInfo(m)}
+    <div class="sec"><span>하자 현황</span></div>
+    <dl class="kv">
+      <dt>하자 발생 여부</dt><dd>${it.open.length ? `<b style="color:var(--red)">예</b> · 진행 중 ${it.open.length}건` : ds.length ? '아니오 · 진행 중 하자 없음' : '아니오 · 하자 기록 없음'}</dd>
+      <dt>하자 유형</dt><dd>${it.open.length ? esc([...new Set(it.open.map(d => d.type))].join(', ')) : NA('해당 없음')}</dd>
+      <dt>보수 상태</dt><dd>${it.open.length ? it.open.map(d => `${esc(d.id)} ${esc(repairLabel(d.status))}`).join('<br>') : it.done.length ? it.done.map(d => `${esc(d.id)} ${esc(normSt(d.status))}`).join('<br>') : NA('해당 없음')}</dd>
+    </dl>
+    ${insEditor(m, it)}
+    ${detailBlock(m)}
+    <div class="sec"><span>하자·보수 이력 ${ds.length}건</span>${W ? `<button class="btn sm pri" id="dNew">+ 이 부재에 하자 등록</button>` : ''}</div>
+    <div class="dlist">${ds.length ? ds.map(d => `<div class="dcard" data-did="${esc(d.id)}"><div style="display:flex;justify-content:space-between;gap:8px"><b>${esc(d.id)} · ${esc(d.type)}</b>${prChip(d.status)}</div><div style="color:var(--ink2);font-size:13px;margin-top:2px">${esc(d.part)} — ${esc(d.desc)}</div><div style="color:var(--ink3);font-size:12px;margin-top:2px">발생일 ${esc(d.date)}${d.repairDate ? ` · 보수일 ${esc(d.repairDate)}` : ''}${d.verifyDate ? ` · 검증일 ${esc(d.verifyDate)}` : ''}</div></div>`).join('') : '<div class="empty" style="padding:16px">등록된 하자가 없습니다</div>'}</div>`; });
+  $('#dFocus').onclick = () => focusMember(m.eid);
+  const nb = $('#dNew'); if (nb) nb.onclick = () => openForm(null, m.eid);
+  $$('#dB .dcard').forEach(c => c.onclick = () => openDefect(c.dataset.did));
+  $$('#dB [data-od]').forEach(a => a.onclick = e => { e.preventDefault(); if (a.dataset.od) openDefect(a.dataset.od); });
+  $$('#dB [data-ins]').forEach(b => b.onclick = () => { const t = it.tasks.find(x => insKey(x.d.id, m.eid) === b.dataset.key); if (t) setInspection(m, t, b.dataset.ins); });
+  $$('#dB [data-insreg]').forEach(b => b.onclick = () => { const t = it.tasks.find(x => insKey(x.d.id, m.eid) === b.dataset.insreg); if (t) openForm(null, m.eid, { type: t.d.type, fromIns: true, insKey: b.dataset.insreg, insDef: t.d.id }); });
+  wireDetail(m);
+  if (!opt.refresh) { showDrawer(true); if (opt.from !== 'from3d' && opt.focus !== false) focusMember(m.eid); }
+  draw3D(); drawRoof();
+}
+
+/* ---------- 하자 상세 ---------- */
+const PROC = ['하자 접수', '하자 확인', '유사 부재 점검', '보수 진행', '보수 완료', '검증 완료'];
+function procIndex(s){ return { '접수': 0, '하자 확인': 1, '보수 진행': 3, '보수 완료': 4, '검증 완료': 5 }[normSt(s)]; }
+function simList(d){
+  const ts = (M().tasksByD.get(d.id) || []);
+  const no = new Map(sortedMembers().map((m, i) => [String(m.eid), i]));
+  return ts.map(t => ({ m: S.members.get(t.eid), t, it: info(t.eid) })).filter(x => x.m).sort((a, b) => no.get(a.t.eid) - no.get(b.t.eid));
+}
+const TSC = { '점검 대상': 's-sim', '점검 진행': 's-sim', '점검 완료(이상 없음)': 's-ok', '점검 결과 하자 확인': 's-def', '점검 취소': 's-cxl' };
+const blobUrl = id => window.HJ_BLOB ? window.HJ_BLOB(id) : '/_blob/' + encodeURIComponent(id);
+function photoGrid(ids, label){
+  return ids.length ? `<div class="photos">${ids.map(p => `<a href="${esc(blobUrl(p))}" target="_blank" rel="noopener"><img src="${esc(blobUrl(p))}" alt="${esc(label)}" loading="lazy" onerror="this.style.opacity=.2"></a>`).join('')}</div>` : `<div class="na" style="font-size:13px">등록된 사진 없음</div>`;
+}
+function openDefect(id, opt = {}){
+  const d = S.defects.get(id); if (!d) { if (opt.refresh) closeDrawer(); return; }
+  const m = S.members.get(String(d.eid)) || {};
+  S.drawer = { kind:'d', id }; S.sel = String(d.eid);
+  const W = canEdit(), st = normSt(d.status), pi = procIndex(st);
+  const sims = simList(d); const simDone = sims.filter(x => x.t.status === '점검 완료(이상 없음)').length;
+  const simBad = sims.filter(x => x.t.status === '점검 결과 하자 확인').length, simCxl = sims.filter(x => x.t.status === '점검 취소').length;
+  const simLeft = sims.filter(x => x.t.open).length;
+  $('#dK').textContent = `${m.cat||''} · ${m.mark||d.eid}`;
+  $('#dT').innerHTML = `${esc(d.id)} ${prChip(st)}`;
+  const before = d.photos || [], after = d.photosAfter || [];
+  keepScroll(opt.refresh, () => { $('#dB').innerHTML = `
+    <div class="dact"><button class="btn sm" id="dFocus">◎ 3D에서 부재로 이동</button><button class="btn sm" id="dMem">부재 정보 · ${esc(m.mark||'-')}</button></div>
+    <div class="sec" id="secProc" style="margin-top:4px"><span>하자관리 프로세스</span><span class="hint">보수 상태: <b>${esc(repairLabel(st))}</b></span></div>
+    <ol class="proc">${PROC.map((p, i) => {
+      const cls = i === 2 ? ('par ' + (!sims.length ? 'skip' : !simLeft ? 'done' : 'cur'))
+        : (i < pi || (i === pi && pi === 5) ? 'done' : i === pi ? 'cur' : '');
+      const sub = i === 2 ? (!sims.length ? '대상 없음' : `병행 · 남은 ${simLeft}/${sims.length}`) : '';
+      return `<li class="${cls}"><i>${i + 1}</i><span>${p}</span>${sub ? `<small>${sub}</small>` : ''}</li>`; }).join('')}</ol>
+    <div class="hint procn">현재 하자 상태 <b>${esc(st)}</b> (저장되는 하자 상태 5종 중 ${DSTEPS.indexOf(st) + 1}번째). 3번 ‘유사 부재 점검’은 하자 상태가 아니라 같은 유형 부재를 따로 점검하는 <b>병행 작업</b>이며, 원인 하자의 보수·검증과 관계없이 끝날 때까지 남습니다.</div>
+    ${W ? `<div class="steps">${DSTEPS.map(s => { const g = stageGate(d, s); return `<button class="st-${PRC[s]} ${st===s?'on':''}" data-st="${s}" ${g.ok || st === s ? '' : 'disabled'} title="${esc(g.ok ? (g.back ? '이전 단계로 되돌리기 (사유 필요)' : '다음 단계로 진행') : g.why)}">${s}</button>`; }).join('')}</div><div class="hint" style="margin:-6px 0 12px">다음 단계로 한 칸씩 진행합니다. 이전 단계로 되돌릴 때는 사유를 남깁니다. 모든 변경은 처리 기록에 남습니다.</div>` : ''}
+    <div class="sec"><span>하자 정보</span></div>
+    <dl class="kv">
+      <dt>하자 발생 부재</dt><dd><b>${esc(m.mark||'-')}</b> <span class="mono" style="color:var(--ink3)">${esc(idText(m.eid ? m : d))}</span><div class="hint">${esc(m.type||'')}</div></dd>
+      <dt>하자 유형</dt><dd>${esc(d.type)}</dd>
+      <dt>발생 위치</dt><dd>${esc(d.part)}</dd>
+      <dt>발생일</dt><dd>${esc(d.date)}</dd>
+      <dt>하자 내용</dt><dd>${esc(d.desc)}</dd>
+      <dt>담당·업체</dt><dd>${d.owner ? esc(d.owner) : NA('미지정')}</dd>
+    </dl>
+    <div class="cm2">
+      <div class="cmb"><h4>하자 원인${demoTag(d,'cause')}</h4>${d.cause ? `<p>${esc(d.cause)}</p>` : `<p class="na">아직 입력되지 않음 · ‘하자 확인’ 단계에서 입력</p>`}</div>
+      <div class="cmb"><h4>보수 방법${demoTag(d,'method')}</h4>${d.method ? `<p>${esc(d.method)}</p>` : `<p class="na">아직 입력되지 않음 · ‘하자 확인’ 또는 ‘보수 진행’ 단계에서 입력</p>`}</div>
+    </div>
+    <div id="secDet">${m.eid ? detailBlock(m, d.id) : ''}</div>
+    <div class="sec" id="secSim"><span>유사 부재 점검 · 같은 유형 ${sims.length}개</span><span class="hint">남은 ${simLeft} · 이상 없음 ${simDone} · 하자 확인 ${simBad}${simCxl ? ` · 취소 ${simCxl}` : ''}</span></div>
+    ${sims.length ? `<div class="simg">${sims.map(x => `<button class="simc ${TSC[x.t.status] || 's-sim'}" data-eid="${esc(x.m.eid)}" title="${esc(x.m.mark)} · ${esc(x.t.status)}">${esc(x.m.mark)}</button>`).join('')}</div><div class="hint" style="margin-top:6px">이 하자(${esc(d.id)})를 기준으로 한 점검 결과입니다. 노랑 = 점검 대상·진행, 연파랑 = 이상 없음 확인, 빨강 = 점검 결과 하자 확인, 회색 = 취소. 부재를 눌러 점검 결과를 입력합니다. 원인 하자가 보수·검증되어도 남은 점검은 그대로 유지됩니다.</div>${W && simLeft ? `<div style="margin-top:8px"><button class="btn sm" id="simCxl">남은 점검 ${simLeft}건 사유 입력 후 취소…</button></div>` : ''}` : `<div class="na" style="font-size:13px">같은 유형의 다른 부재가 없습니다</div>`}
+    <div class="sec" id="secRep"><span>보수 · 검증</span></div>
+    <dl class="kv">
+      <dt>보수일</dt><dd>${d.repairDate ? esc(d.repairDate) : NA('미입력')}${demoTag(d,'repair')}</dd>
+      <dt>보수 내용</dt><dd>${d.repairDesc ? esc(d.repairDesc) : NA('미입력')}</dd>
+      <dt>검증일</dt><dd>${d.verifyDate ? esc(d.verifyDate) : NA('미입력')}${demoTag(d,'verify')}</dd>
+      <dt>검증 결과</dt><dd>${d.verifyResult ? esc(d.verifyResult) : NA('미입력')}${d.verifier ? ` <span class="hint">· ${esc(d.verifier)}</span>` : ''}</dd>
+    </dl>
+    <div class="ph2">
+      <div><div class="sec sm"><span>보수 전 사진 ${before.length}장</span>${S.assets && W ? `<label class="btn sm" style="cursor:pointer">+ 추가<input type="file" data-ph="photos" accept="image/png,image/jpeg,image/webp" multiple hidden></label>` : ''}</div>${photoGrid(before, '보수 전 사진')}</div>
+      <div><div class="sec sm"><span>보수 후 사진 ${after.length}장</span>${S.assets && W ? `<label class="btn sm" style="cursor:pointer">+ 추가<input type="file" data-ph="photosAfter" accept="image/png,image/jpeg,image/webp" multiple hidden></label>` : ''}</div>${photoGrid(after, '보수 후 사진')}</div>
+    </div>
+    <div class="sec">처리 기록 · 상태 변경 이력</div>
+    <ul class="log">${(d.log||[]).slice().reverse().map(l => `<li class="${l.kind === 'status' ? 'ls' : ''}">${esc(l.msg)}<div class="t">${esc(fmtT(l.t))}${l.by ? ' · ' + esc(who(l.by)) : ''}</div></li>`).join('') || '<li>기록 없음</li>'}</ul>
+    ${W ? `<div class="note"><input id="dNote" placeholder="메모 추가 (예: 업체 현장 확인 11/5 예정)"><button class="btn sm" id="dNoteB">추가</button></div>
+    <div style="display:flex;gap:8px;margin-top:20px"><button class="btn" id="dEdit">하자 정보 수정</button><span style="flex:1"></span><button class="btn" id="dDel" style="color:var(--red)">삭제</button></div>` : ''}`; });
+  $('#dMem').onclick = () => openMember(d.eid, { focus: false });
+  $('#dFocus').onclick = () => focusMember(d.eid);
+  $$('#dB .simc').forEach(b => b.onclick = () => openMember(b.dataset.eid));
+  const sc = $('#simCxl'); if (sc) sc.onclick = () => cancelTasks(d, sims.filter(x => x.t.open));
+  if (m.eid) wireDetail(m, d.id);
+  if (W) {
+    $$('#dB .steps button').forEach(b => b.onclick = () => { if (b.dataset.st !== st) openStage(d, b.dataset.st); });
+    $('#dEdit').onclick = () => openForm(d.id);
+    $('#dDel').onclick = () => confirmDel(d);
+    const nb = $('#dNoteB'), ni = $('#dNote');
+    const addNote = () => { const t = ni.value.trim(); if (!t) return; nb.disabled = true; patchDefect(d.id, {}, '메모: ' + t).catch(e => { toast(dbErr(e)); const x = $('#dNote'); if (x) x.value = t; }).finally(() => { nb.disabled = false; }); };
+    nb.onclick = addNote; ni.onkeydown = e => { if (e.key === 'Enter') addNote(); };
+    $$('#dB [data-ph]').forEach(inp => inp.onchange = async () => { const files = [...inp.files]; if (!files.length) return; const key = inp.dataset.ph; toast('사진 올리는 중…'); const ids = await uploadPhotos(files); if (ids.length) { try { await patchDefect(d.id, { [key]: [...(d[key]||[]), ...ids] }, `${key === 'photos' ? '보수 전' : '보수 후'} 사진 ${ids.length}장 추가`); } catch (e) { toast('사진은 올렸지만 하자 기록에 연결하지 못했습니다: ' + dbErr(e)); } } });
+  }
+  if (!opt.refresh) { showDrawer(true); if (opt.focus) focusMember(d.eid); }
+  draw3D(); drawRoof();
+  resolveNames(d.log);
+}
+async function resolveNames(log){
+  if (!S.user || !S.user.profiles) return;
+  const ids = [...new Set((log||[]).map(l => l.by).filter(x => x && !(x in S.names)))];
+  if (!ids.length) return;
+  try { const ps = await S.user.profiles(ids); ids.forEach(i => { const n = ps && ps[i] && ps[i].name; S.names[i] = n || '사용자'; }); if (S.drawer && S.drawer.kind==='d') openDefect(S.drawer.id, { refresh: true }); } catch {}
+}
+
+/* ---------- 단계 변경 (필요 정보 입력 → 상태 변경 → 이력 기록) ---------- */
+const STAGE_FIELDS = {
+  '접수':      [['note', '되돌리는 사유', 'textarea', true]],
+  '하자 확인': [['confirmDate', '확인일', 'date', true], ['cause', '하자 원인 (현장 판단)', 'textarea', false], ['method', '보수 방법 (계획)', 'textarea', false]],
+  '보수 진행': [['startDate', '보수 착수일', 'date', true], ['method', '보수 방법', 'textarea', false], ['owner', '담당·업체', 'text', false]],
+  '보수 완료': [['repairDate', '보수일', 'date', true], ['repairDesc', '보수 내용', 'textarea', true], ['@after', '보수 후 사진', 'file', false]],
+  '검증 완료': [['verifyDate', '검증일', 'date', true], ['verifyResult', '검증 결과', 'textarea', true], ['verifier', '검증자', 'text', false]],
+};
+let stageCtx = null;
+/* 단계 이동 규칙: 다음 단계로 한 칸씩, 되돌리기는 사유 필수. 검증 완료는 보수 완료 + 보수일·보수 내용이 있어야 함 */
+function stageGate(d, to){
+  const from = normSt(d.status), fi = DSTEPS.indexOf(from), ti = DSTEPS.indexOf(to);
+  if (ti === fi) return { ok: false, why: '현재 단계입니다' };
+  if (ti < fi) return { ok: true, back: true };
+  if (ti > fi + 1) return { ok: false, why: `‘${DSTEPS[fi + 1]}’ 단계를 먼저 거쳐야 합니다` };
+  if (to === '검증 완료' && (!d.repairDate || !d.repairDesc)) return { ok: false, why: '보수일과 보수 내용이 기록되어 있어야 검증할 수 있습니다' };
+  return { ok: true, back: false };
+}
+/* 실제 입력된 날짜만 비교: 발생일 ≤ 확인일 ≤ 착수일 ≤ 보수일 ≤ 검증일 */
+const DATE_CHAIN = [['date', '발생일'], ['confirmDate', '확인일'], ['startDate', '보수 착수일'], ['repairDate', '보수일'], ['verifyDate', '검증일']];
+function dateOrderError(rec, upto){
+  let prev = null; const lim = upto ? DSTEPS.indexOf(upto) : 4;   // 되돌린 뒤 남아 있는 이후 단계 날짜는 비교하지 않음
+  for (const [k, lab] of DATE_CHAIN.slice(0, lim + 1)) {
+    const v = rec[k]; if (!v) continue;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return `${lab} 형식이 올바르지 않습니다 (YYYY-MM-DD)`;
+    if (prev && v < prev[1]) return `${lab}(${v})이 ${prev[0]}(${prev[1]})보다 빠를 수 없습니다`;
+    prev = [lab, v];
+  }
+  return '';
+}
+function openStage(d, to){
+  if (!canEdit()) return;
+  const g = stageGate(d, to); if (!g.ok) { toast(g.why); return; }
+  const from = normSt(d.status), back = g.back;
+  const fields = back && to !== '접수' ? [['note', '되돌리는 사유', 'textarea', true]] : STAGE_FIELDS[to];
+  stageCtx = { id: d.id, from, to, fields, back, uploaded: null };
+  $('#sgT').textContent = `${d.id} · ${from} → ${to}`;
+  $('#sgD').textContent = back ? '이전 단계로 되돌립니다. 사유를 남겨 주세요.' : to === '검증 완료' ? '보수 결과를 확인한 뒤 검증 결과를 기록합니다. 보수 완료와 별도로 관리됩니다.' : to === '보수 완료' ? '보수가 끝난 날짜와 내용을 기록합니다. 이후 검증 단계가 남아 있습니다.' : '';
+  $('#sgF').innerHTML = fields.map(([k, lab, type, req]) => {
+    const v = k.startsWith('@') ? '' : esc(d[k] || (type === 'date' ? today() : ''));
+    const r = req ? ' required' : '';
+    if (type === 'textarea') return `<label class="full">${esc(lab)}${req ? '' : ' <span class="hint">선택</span>'}<textarea name="${k}"${r}>${v}</textarea></label>`;
+    if (type === 'file') return S.assets ? `<label class="full">${esc(lab)} <span class="hint">선택 · 여러 장</span><input type="file" name="${k}" accept="image/png,image/jpeg,image/webp" multiple></label>` : '';
+    return `<label>${esc(lab)}${req ? '' : ' <span class="hint">선택</span>'}<input type="${type}" name="${k}" value="${v}"${r}></label>`;
+  }).join('');
+  $('#sgErr').textContent = '';
+  $('#mStage').classList.add('on');
+}
+$('#sgSave').onclick = async () => {
+  if (!stageCtx) return; const f = $('#sgF'), d = S.defects.get(stageCtx.id); if (!d) return;
+  const err = $('#sgErr'); err.textContent = '';
+  const g = stageGate(d, stageCtx.to); if (!g.ok) { err.textContent = g.why; return; }   // 저장 직전에 다시 확인
+  const vals = {}, miss = [];
+  for (const [k, lab, type, req] of stageCtx.fields) {
+    if (type === 'file') continue;
+    const v = (f.elements[k] && f.elements[k].value || '').trim(); if (req && !v) miss.push(lab); if (k !== 'note') vals[k] = v;
+  }
+  if (miss.length) { err.textContent = `${miss.join(', ')}을(를) 입력해 주세요.`; return; }
+  const de = dateOrderError({ ...d, ...vals }, stageCtx.to); if (de) { err.textContent = de; return; }
+  const b = $('#sgSave'); b.disabled = true; b.textContent = '저장 중…';
+  try {
+    const fi = f.elements['@after']; const failed = [];
+    if (fi && fi.files && fi.files.length && !stageCtx.uploaded) stageCtx.uploaded = await uploadPhotos([...fi.files], failed);   // 재시도 때 다시 올리지 않음
+    const ids = stageCtx.uploaded || [];
+    if (ids.length) vals.photosAfter = [...(d.photosAfter || []), ...ids];
+    const note = f.elements.note ? f.elements.note.value.trim() : '';
+    const ch = k => vals[k] && vals[k] !== (d[k] || '');
+    const detail = [ch('cause') && '원인', ch('method') && '보수 방법', ch('owner') && '담당', ch('repairDesc') && '보수 내용', ch('verifyResult') && '검증 결과', ids.length && `보수 후 사진 ${ids.length}장`].filter(Boolean).join(', ');
+    const msg = `상태 변경: ${stageCtx.from} → ${stageCtx.to}${note ? ` (사유: ${note})` : ''}${detail ? ` · 입력: ${detail}` : ''}`;
+    const chg = k => vals[k] && vals[k] !== (d[k] || ''); const demo = Array.isArray(d.demo) ? d.demo.filter(k => !((k === 'cause' && chg('cause')) || (k === 'method' && chg('method')) || (k === 'repair' && chg('repairDesc')) || (k === 'verify' && chg('verifyResult')))) : undefined;
+    await patchDefect(d.id, { ...vals, status: stageCtx.to, ...(demo ? { demo } : {}) }, msg, { kind: 'status', from: stageCtx.from, to: stageCtx.to });
+    $('#mStage').classList.remove('on'); stageCtx = null;   // 성공했을 때만 닫음
+    if (failed.length) toast(`상태는 저장했지만 사진 ${failed.length}장(${failed.join(', ')})은 올리지 못했습니다`);
+  } catch (e) { err.textContent = dbErr(e) + ' 입력한 내용은 그대로 있습니다. 다시 시도해 주세요.'; }
+  finally { b.disabled = false; b.textContent = '상태 변경'; }
+};
+
+/* ---------- 유사 부재 점검 ---------- */
+async function setInspection(m, t, status, reason){
+  if (!S.db || !canEdit()) return false;
+  if (t.status === status) return false;
+  if (status === '점검 취소' && !reason) { askReason(`${m.mark} · ${t.d.id} 점검 취소`, '점검을 하지 않고 이 작업을 닫는 사유를 남겨 주세요. (예: 같은 유형이지만 노출 조건이 달라 점검 대상에서 제외)', r => setInspection(m, t, status, r)); return false; }
+  const key = insKey(t.d.id, m.eid), prev = t.rec && t.rec.defId ? t.rec : null;
+  const now = new Date().toISOString();
+  const log = [...((prev && prev.log) || []), { t: now, by: S.me || '', msg: `${t.status} → ${status}${reason ? ` (사유: ${reason})` : ''}` }].slice(-30);
+  const rec = { key, defId: t.d.id, eid: String(m.eid), mark: m.mark, status, note: reason || (prev && prev.note) || '', at: now, by: S.me || '', log, ...(prev && prev.linked ? { linked: prev.linked } : {}) };
+  try { await withRetry(() => S.db.doc('inspections/' + key).set(rec)); S.insp.set(key, rec); toast(`${m.mark}: ${status}`); render(); if (status === '점검 결과 하자 확인') setTimeout(() => { const el = $('#secIns'); el && el.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 50); return true; }
+  catch (e) { toast(dbErr(e)); return false; }
+}
+async function cancelTasks(d, list){
+  if (!list.length || !canEdit()) return;
+  askReason(`${d.id} 남은 점검 ${list.length}건 취소`, '원인 하자의 보수·검증만으로는 점검 작업이 끝나지 않습니다. 남은 점검을 하지 않고 닫는 사유를 남겨 주세요. 각 점검 기록에 사유가 남습니다.', async r => {
+    let ok = 0;
+    for (const x of list) { if (await setInspection(x.m, x.t, '점검 취소', r)) ok++; }
+    toast(`${ok}/${list.length}건 점검을 취소했습니다`);
+  });
+}
+function askReason(title, desc, cb){
+  $('#rsT').textContent = title; $('#rsD').textContent = desc; $('#rsI').value = ''; $('#rsErr').textContent = '';
+  $('#mReason').classList.add('on'); setTimeout(() => $('#rsI').focus(), 30);
+  $('#rsOk').onclick = async () => { const v = $('#rsI').value.trim(); if (!v) { $('#rsErr').textContent = '사유를 입력해 주세요.'; return; } $('#mReason').classList.remove('on'); await cb(v); };
+}
+
+/* ---------- 공법 상세도 ---------- */
+const detailKey = m => { const r = /^([A-Za-z]+-\d+)/.exec(String(m && m.detail || '').trim()); return r ? r[1] : ''; };
+const tokens = s => String(s || '').split(/[,\/·]/).map(x => x.trim()).filter(Boolean);
+function hotTokens(eid, onlyId){
+  const it = info(eid);
+  const ds = onlyId ? [S.defects.get(onlyId)].filter(Boolean) : (it && it.open.length ? it.open : []);
+  const hot = new Set(), warn = new Set();
+  ds.forEach(d => { tokens(d.part).forEach(x => hot.add(x)); (TYPE_HINT[d.type] || []).forEach(x => warn.add(x)); });
+  hot.forEach(x => warn.delete(x));
+  return { hot, warn, types: [...new Set(ds.map(d => d.type))] };
+}
+const isHot = (key, set) => { for (const h of set) if (h.includes(key) || key.includes(h)) return true; return false; };
+const mkLv = (hot, warn) => k => isHot(k, hot) ? 2 : isHot(k, warn) ? 1 : 0;
+
+function cwDetail(hot, warn){
+  const L = mkLv(hot, warn), H = k => L(k) === 2, HL = k => L(k) > 0, FILL = (k, d) => L(k) === 2 ? '#F6C9C7' : L(k) === 1 ? '#FDE3C2' : d, STK = (k, d) => L(k) === 2 ? '#D93A35' : L(k) === 1 ? '#D9822B' : d;
+  const red = '#D93A35', g = [];
+  const lab = (x1,y1,x2,y2,t,k,anchor='start') => g.push(`<g class="lb${H(k)?' hot':''}"><path d="M${x1},${y1} L${x2},${y2} L${x2+(anchor==='start'?12:-12)},${y2}" fill="none" stroke="${STK(k, '#5A6270')}" stroke-width="1.2"/><circle cx="${x1}" cy="${y1}" r="2.6" fill="${STK(k, '#5A6270')}"/><text x="${x2+(anchor==='start'?16:-16)}" y="${y2+4}" text-anchor="${anchor}" font-size="17" font-weight="${HL(k)?700:500}" fill="${STK(k, '#1B1F24')}">${t}</text></g>`);
+  // exterior / interior labels
+  g.push(`<text x="40" y="30" font-size="15" fill="#8B929C">실외</text><text x="470" y="30" font-size="15" fill="#8B929C" text-anchor="end">실내</text>`);
+  // slab
+  g.push(`<rect x="250" y="262" width="250" height="56" fill="#E3E0D8" stroke="#8B8778" stroke-width="1.2"/>`);
+  for (let x=258;x<500;x+=14) g.push(`<line x1="${x}" y1="318" x2="${x+12}" y2="262" stroke="#C9C5BA" stroke-width="1"/>`);
+  g.push(`<rect x="250" y="250" width="250" height="12" fill="#F1EFEA" stroke="#B9B6AD"/>`);
+  // fire stop
+  g.push(`<rect x="196" y="270" width="54" height="34" fill="${FILL('내화', '#F4E7B8')}" stroke="${STK('내화', '#B59A3C')}" stroke-width="1.2"/>`);
+  for (let x=200;x<248;x+=8) g.push(`<path d="M${x},274 q4,6 0,12 q-4,6 0,12" fill="none" stroke="#C8AE55" stroke-width="1"/>`);
+  // glass upper & lower
+  const glass = (y1,y2) => `<rect x="118" y="${y1}" width="7" height="${y2-y1}" fill="${FILL('유리', '#CFE3F2')}" stroke="${STK('유리', '#6E95B5')}" stroke-width="1.2"/><rect x="133" y="${y1}" width="7" height="${y2-y1}" fill="${FILL('유리', '#CFE3F2')}" stroke="${STK('유리', '#6E95B5')}" stroke-width="1.2"/>`;
+  g.push(glass(40,226), glass(282,400));
+  // spandrel panel
+  g.push(`<rect x="146" y="282" width="12" height="118" fill="${FILL('패널', '#D9D3E6')}" stroke="${STK('패널', '#857BA3')}" stroke-width="1.2"/>`);
+  // transom
+  g.push(`<path d="M104,232 h92 v44 h-92 z" fill="${FILL(L('트랜섬') >= L('멀리언') ? '트랜섬' : '멀리언', '#C5CBD3')}" stroke="${STK(L('트랜섬') >= L('멀리언') ? '트랜섬' : '멀리언', '#56606E')}" stroke-width="1.6"/>`);
+  g.push(`<path d="M150,236 v36 M104,254 h46" stroke="#7D8794" stroke-width="1"/>`);
+  // mullion (behind, dashed)
+  g.push(`<rect x="160" y="40" width="34" height="360" fill="none" stroke="${STK('멀리언', '#7D8794')}" stroke-width="1.2" stroke-dasharray="5 4"/>`);
+  // gaskets
+  const gk = STK('가스켓', '#2B2F35');
+  [[140,222],[140,280]].forEach(([x,y]) => g.push(`<rect x="${x}" y="${y}" width="6" height="8" rx="2" fill="${gk}"/>`));
+  // sealant beads (exterior)
+  const sc = STK('실링', '#2B2F35'), sr = (HL('실링') ? 6.5 : 4.5);
+  g.push(`<circle cx="112" cy="229" r="${sr}" fill="${sc}"/><circle cx="112" cy="279" r="${sr}" fill="${sc}"/>`);
+  if (H('실링')) g.push(`<circle cx="112" cy="229" r="13" fill="none" stroke="${red}" stroke-width="1.5" stroke-dasharray="3 3"/><circle cx="112" cy="279" r="13" fill="none" stroke="${red}" stroke-width="1.5" stroke-dasharray="3 3"/>`);
+  // anchor
+  const ac = STK('앵커', '#56606E');
+  g.push(`<path d="M196,240 h70 v10 h-60 v14 h-10 z" fill="${FILL('앵커', '#AEB6C0')}" stroke="${ac}" stroke-width="1.4"/><rect x="236" y="244" width="6" height="30" fill="${ac}"/><circle cx="239" cy="244" r="5" fill="none" stroke="${ac}" stroke-width="1.4"/>`);
+  // labels
+  lab(112,229,60,190,'실링 (웨더 실링)','실링','end');
+  lab(122,120,60,110,'복층유리','유리','end');
+  lab(150,236,60,330,'트랜섬 (수평 멀리언)','트랜섬','end');
+  lab(143,226,60,262,'가스켓','가스켓','end');
+  lab(177,90,310,90,'멀리언 (수직)','멀리언');
+  lab(152,360,60,385,'스팬드럴 패널','패널','end');
+  lab(255,245,310,200,'앵커 브라켓','앵커');
+  lab(222,288,310,350,'내화충전재','내화');
+  lab(420,290,420,370,'슬래브','슬래브');
+  return `<svg viewBox="-180 12 705 400" class="det" role="img" aria-label="커튼월 하부 상세도">${g.join('')}</svg>`;
+}
+function ppDetail(hot, warn){
+  const L = mkLv(hot, warn), H = k => L(k) === 2, HL = k => L(k) > 0, FILL = (k, d) => L(k) === 2 ? '#F6C9C7' : L(k) === 1 ? '#FDE3C2' : d, STK = (k, d) => L(k) === 2 ? '#D93A35' : L(k) === 1 ? '#D9822B' : d;
+  const red = '#D93A35', g = [];
+  const lab = (x1,y1,x2,y2,t,k,anchor='start') => g.push(`<g><path d="M${x1},${y1} L${x2},${y2} L${x2+(anchor==='start'?12:-12)},${y2}" fill="none" stroke="${STK(k, '#5A6270')}" stroke-width="1.2"/><circle cx="${x1}" cy="${y1}" r="2.6" fill="${STK(k, '#5A6270')}"/><text x="${x2+(anchor==='start'?16:-16)}" y="${y2+4}" text-anchor="${anchor}" font-size="17" font-weight="${HL(k)?700:500}" fill="${STK(k, '#1B1F24')}">${t}</text></g>`);
+  g.push(`<text x="30" y="30" font-size="15" fill="#8B929C">옥상 (실내측)</text><text x="490" y="30" font-size="15" fill="#8B929C" text-anchor="end">실외</text>`);
+  // roof slab + parapet concrete
+  const conc = FILL('콘크리트', '#E3E0D8'), cs = STK('콘크리트', '#8B8778');
+  g.push(`<path d="M20,330 H390 V110 H330 V300 H20 Z" fill="${conc}" stroke="${cs}" stroke-width="1.4"/>`);
+  for (let x=28;x<388;x+=14) g.push(`<line x1="${x}" y1="330" x2="${Math.min(x+12,390)}" y2="${x<330?300:110}" stroke="#C9C5BA" stroke-width=".8" opacity="${x<330?1:.0}"/>`);
+  for (let y=118;y<300;y+=14) g.push(`<line x1="332" y1="${y+12}" x2="388" y2="${y}" stroke="#C9C5BA" stroke-width=".8"/>`);
+  // insulation (roof + upstand)
+  const ins = FILL('단열재', '#F4E3A8'), is = STK('단열재', '#B59A3C');
+  g.push(`<path d="M20,300 H330 V140 H306 V266 H20 Z" fill="${ins}" stroke="${is}" stroke-width="1.3"/>`);
+  for (let x=26;x<300;x+=10) g.push(`<path d="M${x},268 l5,15 l-5,15" fill="none" stroke="${H('단열재')?'#E08B88':'#D3BE70'}" stroke-width=".8"/>`);
+  for (let y=146;y<262;y+=10) g.push(`<path d="M308,${y} l10,5 l-10,5" fill="none" stroke="${H('단열재')?'#E08B88':'#D3BE70'}" stroke-width=".8"/>`);
+  // waterproof membrane
+  const wp = STK('방수층', '#2E5A8F');
+  g.push(`<path d="M20,264 H302 V136 H334 V112" fill="none" stroke="${wp}" stroke-width="${(HL('방수층') ? 5 : 3.5)}"/>`);
+  if (H('방수층')) g.push(`<path d="M298,190 l8,6 l-8,6 l8,6" fill="none" stroke="${red}" stroke-width="2"/>`);
+  // protection board ABS
+  const pb = STK('보호재', '#56606E');
+  g.push(`<rect x="290" y="146" width="9" height="116" fill="${FILL('보호재', '#9AA3AE')}" stroke="${pb}" stroke-width="1.2"/>`);
+  g.push(`<rect x="20" y="246" width="270" height="16" fill="${FILL('보호재', '#D7DBE0')}" stroke="${pb}" stroke-width="1"/>`);
+  // coping
+  const cp = STK('두겁', '#3E4752');
+  g.push(`<path d="M284,98 H402 V122 H396 V106 H292 V150 H284 Z" fill="${FILL('두겁', '#B6BDC6')}" stroke="${cp}" stroke-width="1.5"/>`);
+  // sealant at coping
+  const sc = STK('실링', '#2B2F35');
+  g.push(`<circle cx="289" cy="153" r="${(HL('실링') ? 6 : 4)}" fill="${sc}"/>`);
+  lab(340,104,430,62,'두겁 (금속 캡)','두겁');
+  lab(318,128,430,96,'방수층 (도막방수)','방수층');
+  lab(289,153,180,120,'실링','실링','end');
+  lab(294,200,180,160,'방수보호재 (ABS)','보호재','end');
+  lab(316,220,430,200,'단열재 (압출법보온판)','단열재');
+  lab(360,250,430,250,'파라펫 콘크리트','콘크리트');
+  lab(150,284,150,370,'옥상 단열재','단열재');
+  lab(80,254,60,210,'누름 보호층','보호재','end');
+  return `<svg viewBox="-75 12 740 385" class="det" role="img" aria-label="파라펫 방수 상세도">${g.join('')}</svg>`;
+}
+function wnDetail(hot, warn){
+  const L = mkLv(hot, warn), H = k => L(k) === 2, HL = k => L(k) > 0, FILL = (k, d) => L(k) === 2 ? '#F6C9C7' : L(k) === 1 ? '#FDE3C2' : d, STK = (k, d) => L(k) === 2 ? '#D93A35' : L(k) === 1 ? '#D9822B' : d; const red = '#D93A35', g = [];
+  const lab = (x1,y1,x2,y2,t,k,anchor='start') => g.push(`<g><path d="M${x1},${y1} L${x2},${y2} L${x2+(anchor==='start'?12:-12)},${y2}" fill="none" stroke="${STK(k, '#5A6270')}" stroke-width="1.2"/><circle cx="${x1}" cy="${y1}" r="2.6" fill="${STK(k, '#5A6270')}"/><text x="${x2+(anchor==='start'?16:-16)}" y="${y2+4}" text-anchor="${anchor}" font-size="17" font-weight="${HL(k)?700:500}" fill="${STK(k, '#1B1F24')}">${t}</text></g>`);
+  g.push(`<text x="30" y="34" font-size="15" fill="#8B929C">실외</text><text x="470" y="34" font-size="15" fill="#8B929C" text-anchor="end">실내</text>`);
+  // wall: concrete + insulation + finish (lower part, below sill)
+  g.push(`<rect x="150" y="250" width="70" height="140" fill="#E3E0D8" stroke="#8B8778" stroke-width="1.2"/>`);
+  g.push(`<rect x="220" y="250" width="40" height="140" fill="#F4E3A8" stroke="#B59A3C" stroke-width="1.1"/>`);
+  g.push(`<rect x="260" y="250" width="14" height="140" fill="#F1EFEA" stroke="#B9B6AD"/>`);
+  // upper wall (lintel)
+  g.push(`<rect x="150" y="20" width="70" height="40" fill="#E3E0D8" stroke="#8B8778" stroke-width="1.2"/><rect x="220" y="20" width="40" height="40" fill="#F4E3A8" stroke="#B59A3C"/><rect x="260" y="20" width="14" height="40" fill="#F1EFEA" stroke="#B9B6AD"/>`);
+  // frame
+  const fr = FILL('프레임', '#C5CBD3'), fs = STK('프레임', '#56606E');
+  g.push(`<rect x="200" y="60" width="44" height="22" fill="${fr}" stroke="${fs}" stroke-width="1.5"/><rect x="200" y="222" width="44" height="28" fill="${fr}" stroke="${fs}" stroke-width="1.5"/>`);
+  // glass (double)
+  const gc = FILL('유리', '#CFE3F2'), gs = STK('유리', '#6E95B5');
+  g.push(`<rect x="211" y="82" width="7" height="140" fill="${gc}" stroke="${gs}" stroke-width="1.2"/><rect x="226" y="82" width="7" height="140" fill="${gc}" stroke="${gs}" stroke-width="1.2"/>`);
+  // hardware (handle) inside
+  g.push(`<rect x="244" y="150" width="14" height="6" rx="2" fill="${STK('하드웨어', '#3E4752')}"/>`);
+  // screen
+  g.push(`<line x1="252" y1="86" x2="252" y2="218" stroke="${STK('방충망', '#9AA3AE')}" stroke-width="2" stroke-dasharray="3 3"/>`);
+  // sill flashing (물끊기) outside
+  const fl = STK('물끊기', '#3E4752');
+  g.push(`<path d="M200,250 L132,262 L132,272 L138,272" fill="none" stroke="${fl}" stroke-width="${(HL('물끊기') ? 4 : 3)}"/>`);
+  // sealant outside top & bottom
+  const sc = STK('실링', '#2B2F35'), sr = (HL('실링') ? 6 : 4.2);
+  g.push(`<circle cx="197" cy="64" r="${sr}" fill="${sc}"/><circle cx="197" cy="246" r="${sr}" fill="${sc}"/>`);
+  if (H('실링')) g.push(`<circle cx="197" cy="64" r="12" fill="none" stroke="${red}" stroke-dasharray="3 3"/><circle cx="197" cy="246" r="12" fill="none" stroke="${red}" stroke-dasharray="3 3"/>`);
+  lab(197,64,90,70,'실링 (상부)','실링','end');
+  lab(214,150,90,140,'복층유리','유리','end');
+  lab(197,246,90,215,'실링 (하부)','실링','end');
+  lab(134,264,90,300,'물끊기 (창대 후레싱)','물끊기','end');
+  lab(222,70,310,50,'창호 프레임','프레임');
+  lab(252,120,310,110,'방충망','방충망');
+  lab(256,153,310,165,'핸들·잠금장치','하드웨어');
+  lab(240,300,310,300,'단열재','단열');
+  lab(185,350,310,350,'콘크리트 벽체','콘크리트');
+  return `<svg viewBox="-150 12 650 395" class="det" role="img" aria-label="창호 상세도">${g.join('')}</svg>`;
+}
+
+function detailBlock(m, onlyId){
+  const key = detailKey(m); const up = key && S.details.get(key);
+  const { hot, warn, types } = hotTokens(m.eid, onlyId);
+  const svg = m.cat === '커튼월' ? cwDetail(hot, warn) : m.cat === '파라펫' ? ppDetail(hot, warn) : m.cat === '창호' ? wnDetail(hot, warn) : '';
+  const canUp = S.assets && canEdit() && key;
+  const useUp = up && up.asset && S.detailMode !== 'base';
+  const body = useUp
+    ? (up.type === 'application/pdf' ? `<a class="btn sm" href="${esc(blobUrl(up.asset))}" target="_blank" rel="noopener">상세도 PDF 열기</a>` : `<img src="${esc(blobUrl(up.asset))}" alt="${esc(m.detail)}" style="width:100%;display:block;border-radius:6px" onerror="this.replaceWith(document.createTextNode('도면 이미지를 불러올 수 없습니다'))">`)
+    : (svg || '<div class="na" style="font-size:13px">이 부재 유형의 상세도가 없습니다</div>');
+  const legend = !useUp && svg && (hot.size || warn.size)
+    ? `<div class="dleg">${hot.size ? `<span><i class="lr"></i><b>하자 부위</b> ${esc([...hot].join(', '))}</span>` : ''}${warn.size ? `<span><i class="lo"></i><b>함께 점검할 부위</b> (하자 유형 ‘${esc(types.join(', '))}’ 기준 일반 항목) ${esc([...warn].join(', '))}</span>` : ''}</div>`
+    : !useUp && svg ? `<div class="hint" style="margin-top:6px">진행 중인 하자가 없어 강조 표시가 없습니다</div>` : '';
+  return `<div class="sec"><span>공법 상세도 · ${esc(m.detail || '-')}</span><span style="display:flex;gap:6px">${up && up.asset ? `<button class="btn sm" data-dmode>${S.detailMode==='base'?'등록 도면 보기':'기본 도식 보기'}</button>` : ''}${canUp ? `<label class="btn sm" style="cursor:pointer">${up?'도면 교체':'도면 등록'}<input type="file" data-dup="${esc(key)}" accept="image/png,image/jpeg,image/webp,application/pdf" hidden></label>` : ''}</span></div>
+  <div class="detbox" data-zoom>${body}</div>
+  ${legend}
+  ${!useUp && svg ? `<div class="hint" style="margin-top:4px">개념 도식입니다. 실제 시공 상세도는 ‘도면 등록’으로 올려 교체할 수 있습니다.</div>` : ''}`;
+}
+function wireDetail(m, onlyId){
+  const z = $('#dB [data-zoom]'); if (z) z.onclick = () => { $('#zT').textContent = `${m.mark} · ${m.detail||''}`; $('#zB').innerHTML = z.innerHTML + (z.nextElementSibling && z.nextElementSibling.classList.contains('dleg') ? z.nextElementSibling.outerHTML : ''); $('#mZoom').classList.add('on'); };
+  const t = $('#dB [data-dmode]'); if (t) t.onclick = () => { S.detailMode = S.detailMode === 'base' ? '' : 'base'; S.drawer.kind==='m' ? openMember(m.eid, { refresh: true }) : openDefect(onlyId, { refresh: true }); };
+  const u = $('#dB [data-dup]'); if (u) u.onchange = async () => {
+    const f = u.files[0]; if (!f) return; const key = u.dataset.dup;
+    const type = f.type === 'application/pdf' || /\.pdf$/i.test(f.name) ? 'application/pdf' : (['image/png','image/jpeg','image/webp'].includes(f.type) ? f.type : 'image/jpeg');
+    toast('도면 올리는 중…');
+    try { const r = await S.assets.upload(f, { type }); await withRetry(() => S.db.doc('details/' + key).set({ key, asset: r.id, type, name: f.name, by: S.me||'', at: new Date().toISOString() })); S.detailMode = ''; toast(`${key} 상세도를 등록했습니다`); }
+    catch (e) { toast(e && e.code === 'too_large' ? '20MB 이하 파일만 올릴 수 있습니다' : e && e.code ? dbErr(e) : '도면을 올리지 못했습니다'); }
+  };
+}
+
+/* ---------- writes ---------- */
+function dbErr(e){
+  const c = e && e.code;
+  if (c === 'preview') return '예시 화면에서는 저장할 수 없습니다.';
+  if (c === 'invalid_argument') { S.canWrite = false; applyWriteGate(); return '저장 권한이 없습니다. 이 페이지의 편집 권한이 필요합니다.'; }
+  if (c === 'quota_exceeded') return '저장 공간이 가득 찼습니다. 오래된 기록을 정리해 주세요.';
+  if (c === 'resource_exhausted') return '요청이 많습니다. 잠시 후 다시 시도해 주세요.';
+  return '저장하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+}
+async function withRetry(fn){ try { return await fn(); } catch (e) { if (e && e.code === 'unavailable') { await new Promise(r => setTimeout(r, 600 + Math.random()*600)); return fn(); } throw e; } }
+const logEntry = (msg, extra) => ({ t: new Date().toISOString(), by: S.me || '', msg, ...(extra || {}) });
+/* 저장 실패는 throw로 호출자에게 전달 (호출자가 모달 유지·오류 표시·재시도를 결정) */
+async function patchDefect(id, fields, msg, extra){
+  const d = S.defects.get(id); if (!d) throw { code: 'invalid_argument', message: 'missing defect' };
+  if (PV.on) throw { code: 'preview' };
+  const log = [...(d.log||[]), logEntry(msg, extra)].slice(-80);
+  await withRetry(() => S.db.doc('defects/' + id).update({ ...fields, log, updatedAt: new Date().toISOString() }));
+  toast('저장했습니다');
+  return true;
+}
+async function uploadPhotos(files, failed){
+  const ids = [];
+  for (const f of files) {
+    const type = /png$/i.test(f.name) ? 'image/png' : /webp$/i.test(f.name) ? 'image/webp' : 'image/jpeg';
+    try { const r = await S.assets.upload(f, { type: ['image/png','image/jpeg','image/webp'].includes(f.type) ? f.type : type }); ids.push(r.id); }
+    catch (e) { if (failed) failed.push(f.name); toast(e && e.code === 'too_large' ? `${f.name}: 20MB를 넘는 사진은 올릴 수 없습니다` : `${f.name}: 사진을 올리지 못했습니다`); }
+  }
+  return ids;
+}
+function confirmDel(d){
+  $('#cT').textContent = '하자 삭제';
+  $('#cM').textContent = `${d.id} 하자 기록을 삭제할까요? 처리 기록도 함께 사라집니다. 보수가 끝났다면 삭제 대신 ‘보수 완료’ 또는 ‘검증 완료’로 바꾸는 것을 권장합니다.`;
+  $('#mConfirm').classList.add('on');
+  $('#cOk').onclick = async () => {
+    $('#mConfirm').classList.remove('on');
+    try { await withRetry(() => S.db.doc('defects/' + d.id).delete()); closeDrawer(); toast(`${d.id} 삭제됨`); } catch (e) { toast(dbErr(e)); }
+  };
+}
+
+/* ---------- 하자 접수 폼 ---------- */
+const PARTS = { '커튼월': ['실링','멀리언','트랜섬','유리','패널','앵커','가스켓'], '파라펫': ['방수층','단열재','보호재','콘크리트','두겁','실링'], '창호': ['유리','프레임','실링','물끊기','하드웨어','방충망'] };
+let editing = null;
+function fillMemberSelect(sel, eid){
+  sel.innerHTML = ['커튼월','파라펫','창호'].map(cat => `<optgroup label="${cat}">` + sortedMembers().filter(m => m.cat===cat).map(m => `<option value="${esc(m.eid)}">${esc(m.mark)} · ${esc(m.floor)} · ${esc(idText(m))}${stOf(m.eid)==='def'?' (하자 있음)':stOf(m.eid)==='sim'?' (점검 대상)':''}</option>`).join('') + '</optgroup>').join('');
+  if (eid != null) sel.value = String(eid);
+}
+function updateTags(){
+  const f = $('#form'); const m = S.members.get(String(f.eid.value)); const list = PARTS[m && m.cat] || [];
+  $('#partTags').innerHTML = list.map(p => `<button type="button">${p}</button>`).join('');
+}
+$('#partTags').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const inp = $('#form').part; const cur = inp.value.split(',').map(s=>s.trim()).filter(Boolean); if (!cur.includes(b.textContent)) cur.push(b.textContent); inp.value = cur.join(', '); });
+let formCtx = {};
+function openForm(id, eid, ctx = {}){
+  if (!canEdit()) { toast(S.role === 'admin' ? '편집 권한이 없습니다' : '일반 로그인은 보기 전용입니다. 관리자로 로그인해 주세요'); return; }
+  if (!S.db) { toast('데이터에 연결되지 않아 등록할 수 없습니다'); return; }
+  if (!S.members.size) { toast('부재 정보가 없습니다. 먼저 엑셀을 가져와 주세요'); return; }
+  editing = id || null; formCtx = ctx;
+  const f = $('#form'); f.reset(); $('#fErr').textContent = '';
+  const d = id ? S.defects.get(id) : null;
+  $('#fTitle').textContent = d ? `${d.id} 하자 정보 수정` : '하자 접수';
+  fillMemberSelect(f.eid, d ? d.eid : (eid != null ? eid : (S.sel || null)));
+  f.date.value = d ? d.date : today();
+  if (d) { f.type.value = d.type; f.part.value = d.part; f.desc.value = d.desc; f.owner.value = d.owner || ''; }
+  else if (ctx.type) f.type.value = ctx.type;
+  $('#stField').classList.toggle('hidden', !!d);
+  f.status.value = ctx.fromIns ? '하자 확인' : '접수';
+  $('#photoField').classList.toggle('hidden', !S.assets);
+  updateTags();
+  $('#mForm').classList.add('on');
+  setTimeout(() => (d ? f.desc : f.part).focus(), 30);
+}
+$('#form').eid.addEventListener('change', updateTags);
+$('#form').addEventListener('submit', e => e.preventDefault());
+$('#bNew').onclick = () => openForm(null);
+/* 하자 ID 확보: 문서 lease(acquire)를 잡은 동안 비어 있는지 확인하고 그 자리에서 저장.
+   acquire 실패·오류를 '확보됨'으로 취급하지 않음. 다른 사람이 잡고 있으면 다음 번호로. */
+async function claimDefectId(year, base){
+  const re = new RegExp('^HJ-' + year + '-(\\d+)$'); let max = 0;
+  S.defects.forEach((_, k) => { const r = re.exec(k); if (r) max = Math.max(max, +r[1]); });
+  const holder = S.me || ('tab-' + Math.random().toString(36).slice(2));
+  for (let n = max + 1; n < max + 30; n++) {
+    const id = `HJ-${year}-${String(n).padStart(3,'0')}`;
+    const ref = S.db.doc('defects/' + id);
+    const lease = await withRetry(() => ref.acquire({ holder, ttlMs: 10000 }));   // 오류는 throw → 호출자가 표시
+    if (!lease || !lease.acquired) continue;
+    const snap = await withRetry(() => ref.get());
+    if (snap.exists && (snap.data() || {}).eid) continue;
+    await withRetry(() => ref.set({ id, ...base }));
+    return id;
+  }
+  throw { code: 'unavailable' };
+}
+$('#fSave').onclick = async () => {
+  const f = $('#form'); const err = $('#fErr'); err.textContent = '';
+  const v = { eid: f.eid.value, type: f.type.value, date: f.date.value, part: f.part.value.trim(), desc: f.desc.value.trim(), owner: f.owner.value.trim() };
+  if (!v.eid || !v.part || !v.desc || !v.date) { err.textContent = '하자 발생 부재, 발생 위치, 하자 내용, 발생일을 입력해 주세요.'; return; }
+  if (editing) { const ed = S.defects.get(editing); const de = dateOrderError({ ...ed, date: v.date }, normSt(ed.status)); if (de) { err.textContent = de; return; } }
+  const btn = $('#fSave'); btn.disabled = true; btn.textContent = '저장 중…';
+  try {
+    const files = S.assets && f.photos.files ? [...f.photos.files] : [];
+    if (files.length && !formCtx.uploaded) formCtx.uploaded = await uploadPhotos(files);   // 재시도 때 다시 올리지 않음
+    const newIds = formCtx.uploaded || [];
+    const m = S.members.get(String(v.eid)) || {};
+    if (editing) {
+      const d = S.defects.get(editing);
+      const changes = [];
+      if (String(d.eid) !== String(v.eid)) changes.push('하자 발생 부재');
+      ['type','date','part','desc','owner'].forEach(k => { if ((d[k]||'') !== v[k]) changes.push({type:'하자 유형',date:'발생일',part:'발생 위치',desc:'하자 내용',owner:'담당'}[k]); });
+      if (newIds.length) changes.push(`보수 전 사진 ${newIds.length}장 추가`);
+      if (!changes.length) { $('#mForm').classList.remove('on'); formCtx = {}; return; }
+      await patchDefect(editing, { ...v, eid: String(v.eid), mark: m.mark || d.mark || '', photos: [...(d.photos||[]), ...newIds] }, '수정: ' + changes.join(', '));
+      $('#mForm').classList.remove('on'); formCtx = {};   // 성공했을 때만 닫음
+    } else {
+      const status = f.status.value === '하자 확인' ? '하자 확인' : '접수';
+      const now = new Date().toISOString();
+      const first = [logEntry(`하자 접수 (${m.mark || v.eid}, ${v.type})${formCtx.fromIns ? ` · 유사 부재 점검(${formCtx.insDef || ''})에서 하자 확인` : ''}`, { kind: 'status', from: '', to: '접수' })];
+      if (status === '하자 확인') first.push(logEntry('상태 변경: 접수 → 하자 확인', { kind: 'status', from: '접수', to: '하자 확인' }));
+      const base = { ...v, eid: String(v.eid), mark: m.mark || '', status, photos: newIds, photosAfter: [], createdBy: S.me || '', createdAt: now, updatedAt: now, log: first };
+      const id = await claimDefectId(v.date.slice(0,4) || new Date().getFullYear(), base);
+      const rec = { id, ...base };
+      if (!S.defects.has(id)) S.defects.set(id, rec);
+      if (formCtx.fromIns && formCtx.insKey) { const ins = S.insp.get(formCtx.insKey); if (ins) { const r2 = { ...ins, linked: id, at: now, log: [...(ins.log || []), { t: now, by: S.me || '', msg: `하자 등록 ${id}` }].slice(-30) }; try { await withRetry(() => S.db.doc('inspections/' + formCtx.insKey).set(r2)); S.insp.set(formCtx.insKey, r2); } catch (e2) { toast(`${id}는 접수했지만 점검 기록 연결을 저장하지 못했습니다: ${dbErr(e2)}`); } } }
+      $('#mForm').classList.remove('on'); formCtx = {};
+      toast(`${id} 접수했습니다`);
+      render(); openDefect(id);
+    }
+  } catch (e) { err.textContent = dbErr(e) + ' 입력한 내용은 그대로 있습니다. 다시 시도해 주세요.'; }
+  finally { btn.disabled = false; btn.textContent = '저장'; }
+};
+$$('[data-close]').forEach(b => b.onclick = () => b.closest('.modal').classList.remove('on'));
+$$('.modal').forEach(m => m.addEventListener('mousedown', e => { if (e.target === m) m.classList.remove('on'); }));
+
+/* ---------- 엑셀 내보내기 (Dynamo 입력 형식 유지: 16열 + 추가 열) ---------- */
+/* Revit ‘하자 상태’ 값: Revit 필터(하자 발생 / 유사 하자 점검 대상 / 보수 완료 = 색, 그 밖의 값 = 투명)와 맞춤 */
+const REVIT_STATE = { done: '보수 완료' };
+function exportRows(){
+  return sortedMembers().map((m, i) => {
+    const it = info(m.eid) || { open: [], done: [] };
+    const od = it.open.slice().sort((a,b)=>String(a.id).localeCompare(String(b.id)));
+    const j = k => od.map(d => d[k]).filter(Boolean).join(' / ');
+    return [m.no || i+1, m.cat, m.type, hasRealId(m) ? Number(m.eid) : m.eid, m.mark, m.floor, od.length ? '하자 발생' : '없음', REVIT_STATE[it.st || 'ok'] || ST[it.st || 'ok'].label,
+      j('id'), j('type'), j('part'), j('desc'), od.length ? od.map(d=>d.date).sort().pop() : '', m.detail || '', m.spec || '', m.url || '',
+      m.uniqueId || '', m.material || '', od.length ? od.map(d => repairLabel(d.status)).join(' / ') : it.done.length ? it.done.map(d => normSt(d.status)).join(' / ') : '', it.tasks.length ? it.tasks.map(t => `${t.d.id}:${t.status}`).join(' / ') : '', m.ifcGuid || ''];
+  });
+}
+const HDR = ['No','부재 구분','유형 (Revit)','Element ID','부재 위치 (Mark)','층','하자 발생 여부','관리 상태','하자 ID','하자 유형','하자 부위','하자 내용','점검일','상세도 번호','시방 코드','상세정보 URL','UniqueId','재료','보수 상태','유사 점검 상태','IFC GlobalId'];
+$('#bExport').onclick = async () => {
+  if (PV.on) { toast('예시 화면에서는 내보낼 수 없습니다. 시연 가이드에서 예시 보기를 끝낸 뒤 내보내 주세요'); return; }
+  if (!window.XLSX) { toast('엑셀 모듈을 불러오지 못했습니다'); return; }
+  if (!S.members.size) { toast('내보낼 부재가 없습니다'); return; }
+  compute();
+  const wb = XLSX.utils.book_new();
+  const aoa = [['한양빌딩 부재 하자관리표'], [`하자관리 사이트에서 내보냄 · ${fmtT(new Date().toISOString())} · 관리 상태는 진행 중 하자와 유사 부재 점검 결과로 계산됨 · Element ID로 Revit 부재를 찾음`], [], HDR, ...exportRows()];
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [5,8,24,11,14,6,11,16,13,10,14,36,11,22,26,22,40,22,14,24,24].map(w => ({ wch: w }));
+  ws['!merges'] = [{ s:{r:0,c:0}, e:{r:0,c:7} }];
+  XLSX.utils.book_append_sheet(wb, ws, '하자관리표');
+  const hist = [['하자 ID','부재 위치 (Mark)','Element ID','부재 구분','하자 유형','발생 위치','하자 내용','발생일','진행 상태','보수 상태','하자 원인','보수 방법','보수일','보수 내용','검증일','검증 결과','담당·업체','보수 전 사진','보수 후 사진','최근 기록','최근 수정']];
+  sortedDefects().forEach(d => { const m = S.members.get(String(d.eid)) || {}; const last = (d.log||[]).slice(-1)[0]; hist.push([d.id, m.mark||'', hasRealId(m) ? Number(m.eid) : d.eid, m.cat||'', d.type, d.part, d.desc, d.date, normSt(d.status), repairLabel(d.status), d.cause||'', d.method||'', d.repairDate||'', d.repairDesc||'', d.verifyDate||'', d.verifyResult||'', d.owner||'', (d.photos||[]).length, (d.photosAfter||[]).length, last ? last.msg : '', fmtT(d.updatedAt)]); });
+  const ws2 = XLSX.utils.aoa_to_sheet(hist);
+  ws2['!cols'] = [13,14,11,8,10,14,36,11,10,10,30,30,11,30,11,30,16,8,8,40,16].map(w => ({ wch: w }));
+  XLSX.utils.book_append_sheet(wb, ws2, '하자 이력');
+  const ins = [['부재 위치 (Mark)','Element ID','유형 (Revit)','원인 하자 ID','원인 하자 상태','점검 상태','작업 남음','메모·사유','연결된 하자','최근 변경']];
+  sortedMembers().forEach(m => { const it = info(m.eid); (it ? it.tasks : []).forEach(t => ins.push([m.mark, hasRealId(m) ? Number(m.eid) : m.eid, m.type, t.d.id, normSt(t.d.status), t.status, t.open ? '예' : '아니오', t.rec ? (t.rec.note || '') : '', t.rec && t.rec.linked || '', t.rec ? fmtT(t.rec.at) : ''])); });
+  const ws3 = XLSX.utils.aoa_to_sheet(ins); ws3['!cols'] = [14,11,24,13,12,18,8,30,13,16].map(w => ({ wch: w }));
+  XLSX.utils.book_append_sheet(wb, ws3, '유사 부재 점검');
+  const buf = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+  const name = `한양빌딩_하자관리표_${today().replace(/-/g,'')}.xlsx`;
+  if (!S.downloads) { toast('이 화면에서는 파일 저장을 지원하지 않습니다'); return; }
+  try { await S.downloads.save({ filename: name, data: new Blob([buf]) }); toast('엑셀을 저장했습니다. Revit에서 Dynamo 그래프를 실행해 이 파일을 선택하면 매개변수가 입력됩니다'); }
+  catch (e) { if (e && e.code === 'declined') return; toast(e && e.code === 'rate_limited' ? '이미 저장 창이 열려 있습니다' : '저장하지 못했습니다'); }
+};
+
+/* ---------- 엑셀 가져오기 ---------- */
+let impPlan = null;
+$('#bImport').onclick = () => {
+  if (!canEdit()) { toast('관리자 로그인에서만 가져올 수 있습니다'); return; }
+  if (!S.db) { toast('데이터에 연결되지 않아 가져올 수 없습니다'); return; }
+  impPlan = null; $('#impFile').value = ''; $('#impPrev').innerHTML = ''; $('#impErr').textContent = ''; $('#impGo').disabled = true;
+  $('#mImport').classList.add('on');
+};
+const cell = v => v == null ? '' : (v instanceof Date ? `${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,'0')}-${String(v.getDate()).padStart(2,'0')}` : String(v).trim());
+const MKEYS = ['no','cat','type','mark','floor','detail','spec','url','uniqueId','ifcGuid','material'];
+$('#impFile').onchange = async e => {
+  const file = e.target.files[0]; $('#impErr').textContent = ''; $('#impPrev').innerHTML = ''; $('#impGo').disabled = true; impPlan = null;
+  if (!file) return;
+  if (!window.XLSX) { $('#impErr').textContent = '엑셀 모듈을 불러오지 못했습니다.'; return; }
+  try {
+    const wb = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true });
+    const sn = wb.SheetNames.includes('하자관리표') ? '하자관리표' : wb.SheetNames[0];
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, raw: true, defval: null });
+    const hi = rows.findIndex(r => r && r.map(cell).includes('Element ID'));
+    if (hi < 0) throw new Error("'Element ID' 열을 찾을 수 없습니다.");
+    const H = rows[hi].map(cell); const ix = n => H.indexOf(n);
+    const g = (r, n) => ix(n) >= 0 ? cell(r[ix(n)]) : '';
+    const members = [], defects = []; let skipped = 0;
+    for (const r of rows.slice(hi + 1)) {
+      if (!r) continue;
+      const eid = g(r, 'Element ID').replace(/\.0+$/, '');
+      if (!eid) continue;
+      if (!/^\d+$/.test(eid) && !S.members.has(eid)) { skipped++; continue; }   // 실제 ID가 아니면 기존 임시 키만 허용 (새 식별자 생성 안 함)
+      const mk = g(r, '부재 위치 (Mark)') || g(r, 'Mark');
+      const old = S.members.get(eid) || {};
+      const nm = { ...old, no: Number(g(r,'No')) || old.no || members.length + 1, cat: g(r,'부재 구분') || old.cat || '', type: g(r,'유형 (Revit)') || g(r,'유형') || old.type || '', eid, mark: mk || old.mark || '', floor: g(r,'층') || old.floor || '', detail: g(r,'상세도 번호') || old.detail || '', spec: g(r,'시방 코드') || old.spec || '', url: g(r,'상세정보 URL') || old.url || '' };
+      const uid = g(r, 'UniqueId'); if (uid) nm.uniqueId = uid;            // Revit UniqueId
+      const ifc = g(r, 'IFC GlobalId'); if (ifc) nm.ifcGuid = ifc;         // IFC GlobalId는 별도 속성 (합치지 않음)
+      const mat = g(r, '재료'); if (mat) nm.material = mat;
+      members.push(nm);
+      const hid = g(r, '하자 ID');
+      if (hid && g(r, '하자 발생 여부') === '하자 발생') {
+        hid.split('/').map(s => s.trim()).filter(Boolean).forEach((id, k, arr) => {
+          if (S.defects.has(id)) return;
+          const pick = n => arr.length > 1 ? (g(r, n).split('/')[k] || '').trim() : g(r, n);
+          defects.push({ id, eid, mark: nm.mark, type: pick('하자 유형'), part: pick('하자 부위'), desc: pick('하자 내용'), date: g(r,'점검일').slice(0,10) || today(), status: '접수', owner: '' });
+        });
+      }
+    }
+    if (!members.length) throw new Error('Element ID가 있는 행이 없습니다.');
+    const same = (a, b) => MKEYS.every(k => String(a[k]??'') === String(b[k]??''));
+    const add = members.filter(m => !S.members.has(m.eid)), upd = members.filter(m => S.members.has(m.eid) && !same(m, S.members.get(m.eid)));
+    impPlan = { write: [...add, ...upd], defects };
+    $('#impPrev').innerHTML = `<div class="prev">시트 <b>${esc(sn)}</b> · 부재 ${members.length}행 읽음${skipped ? ` · 식별자가 맞지 않는 ${skipped}행 건너뜀` : ''}<br>· 새 부재 <b>${add.length}</b>개, 정보가 바뀐 부재 <b>${upd.length}</b>개<br>· 새 하자 <b>${defects.length}</b>건 ${defects.length ? '(' + defects.map(d => esc(d.id)).join(', ') + ')' : ''}<br><span class="hint">반영하면 KPI·3D 색·목록이 함께 바뀝니다.</span></div>`;
+    $('#impGo').disabled = !(impPlan.write.length || defects.length);
+    if ($('#impGo').disabled) $('#impPrev').insertAdjacentHTML('beforeend', '<div style="color:var(--ink3);margin-top:8px;font-size:13px">사이트와 내용이 같아 반영할 것이 없습니다.</div>');
+  } catch (ex) { $('#impErr').textContent = '읽지 못했습니다: ' + (ex.message || ex); }
+};
+$('#impGo').onclick = async () => {
+  if (!impPlan) return; const b = $('#impGo'); b.disabled = true; b.textContent = '반영 중…';
+  let ok = 0;
+  try {
+    for (const m of impPlan.write) { await withRetry(() => S.db.doc('members/' + m.eid).set(m)); ok++; }
+    const now = new Date().toISOString();
+    for (const d of impPlan.defects) { await withRetry(() => S.db.doc('defects/' + d.id).set({ ...d, photos: [], photosAfter: [], createdBy: S.me||'', createdAt: now, updatedAt: now, log: [logEntry('엑셀 하자관리표에서 가져옴 (접수)', { kind: 'status', from: '', to: '접수' })] })); ok++; }
+    $('#mImport').classList.remove('on'); toast(`엑셀 반영 완료 (${ok}건)`);
+  } catch (e) { $('#impErr').textContent = dbErr(e) + ` (${ok}건 반영됨)`; }
+  finally { b.textContent = '반영'; b.disabled = false; }
+};
+
+/* ---------- write gating ---------- */
+function applyWriteGate(){
+  const viewer = S.role !== 'admin';
+  const checking = S.canWrite === undefined, no = viewer || checking || S.canWrite === false || !S.db || PV.on;
+  ['#bNew', '#bImport'].forEach(s => { $(s).classList.toggle('hidden', viewer); $(s).disabled = no; $(s).title = no ? (viewer ? '일반 로그인은 보기 전용입니다' : PV.on ? '예시 화면에서는 사용할 수 없습니다' : checking ? '쓰기 권한 확인 중입니다' : '편집 권한이 있어야 사용할 수 있습니다') : ''; });
+  const rb = $('#roleBadge'); if (rb) { rb.textContent = viewer ? '일반 · 보기 전용' : checking ? '관리자 · 권한 확인 중' : S.canWrite === false ? '관리자 · 읽기 전용' : '관리자'; rb.className = 'roleb ' + (viewer || S.canWrite === false ? 'rv' : 'ra'); rb.title = viewer ? '' : S.canWrite === null ? '플랫폼이 쓰기 권한을 알려 주지 않았습니다. 저장이 거부되면 읽기 전용으로 바뀝니다.' : S.canWrite === false ? '이 페이지의 데이터 쓰기 권한이 없습니다' : ''; }
+  document.body.classList.toggle('role-viewer', viewer);
+}
+
+/* ---------- 데이터 연계 구조 ---------- */
+function openLink(){
+  const ms = [...S.members.values()];
+  const real = ms.filter(hasRealId).length, temp = ms.length - real, uid = ms.filter(m => m.uniqueId).length, ifc = ms.filter(m => m.ifcGuid).length;
+  const byCat = c => { const a = ms.filter(m => m.cat === c); return `${a.filter(hasRealId).length}/${a.length}`; };
+  $('#lkStats').innerHTML = `<div class="lks"><span><b>${real}</b>개<small>Revit Element ID 있음</small></span><span><b>${temp}</b>개<small>임시 키 (Revit 연결 전)</small></span><span><b>${uid}</b>개<small>Revit UniqueId</small></span><span><b>${ifc}</b>개<small>IFC GlobalId</small></span></div>
+    <div class="hint" style="margin-top:6px">구분별 Element ID 보유: 커튼월 ${byCat('커튼월')} · 파라펫 ${byCat('파라펫')} · 창호 ${byCat('창호')}</div>`;
+  $('#mLink').classList.add('on');
+}
+$('#bLink').onclick = openLink;
+
+/* ---------- 시연 가이드 (기존 화면 위에서 단계별로 조작) ---------- */
+const demo = { on: false, step: 0 };
+const DEMO = [
+  { t: '건축물 전체 현황 확인', d: 'KPI 카드와 3D 모델로 전체 부재와 하자 현황을 봅니다. 상단 막대는 부재 상태 분포입니다.', say: 'KPI는 등록된 데이터에서 바로 계산됩니다. 카드를 누르면 해당 목록으로 필터링됩니다.' },
+  { t: '하자 발생 부재 확인', d: '빨간 부재를 선택해 하자 상세정보를 엽니다. 카메라가 부재로 이동하고 나머지는 반투명해집니다.', say: '3D에서 부재를 누르는 것과 같은 동작입니다. 부재는 Revit Element ID로 식별됩니다.' },
+  { t: '유사 부재 자동 분류', d: '같은 Revit 유형의 다른 부재가 노란색 ‘유사 하자 점검 대상’으로 분류됩니다.', say: '같은 유형이라는 이유로 하자로 판정하지 않고 점검 대상으로만 분류합니다. 점검 결과는 부재마다 입력합니다.' },
+  { t: '하자 부위 및 상세도 확인', d: '선택한 부재의 공법 상세도에서 하자 부위(빨강)와 하자 유형상 함께 볼 부위(주황 점선)를 확인합니다.', say: '하자 원인과 보수 방법은 따로 기록합니다. 시방 코드는 하자관리표에 입력된 값과 출처를 보여 줍니다.' },
+  { t: '보수 및 검증', d: '프로세스 단계 버튼으로 한 칸씩 진행합니다(보수 진행 → 보수 완료 → 검증 완료). 보수 완료는 초록, 검증 완료는 기본색으로 표시됩니다. 검증 완료는 보수일·보수 내용이 있어야 열립니다.', say: '보수 완료와 검증 완료는 따로 관리합니다. 모든 상태 변경은 처리 기록에 남습니다.' },
+  { t: '만약 보수가 된다면 (예시)', pv: true, d: '하자를 보수했다고 가정한 화면입니다. 보수 완료(검증 대기)는 초록, 검증까지 끝나면 기본색으로 돌아갑니다(보수 이력·사진은 그대로). 같은 부재에 미해결 하자가 있으면 빨강, 같은 유형의 점검이 안 끝났으면 노랑이 유지됩니다. ‘유사 부재 점검도 이상 없음’을 켜면 점검까지 끝난 모습을 봅니다.', say: '실제 기록은 바뀌지 않는 예시 화면입니다. 원인과 보수 방법·사진은 설명용 예시이며 자동 진단이나 검증된 공법이 아닙니다. 실제로는 하자 상세에서 단계별로 보수일·보수 내용·검증 결과를 입력합니다.' },
+  { t: 'BIM 데이터 연계 설명', d: 'Revit Element ID ↔ 엑셀 하자관리표 ↔ 이 사이트 ↔ Dynamo로 이어지는 파일 기반 연계 구조를 봅니다.', say: '자동 동기화가 아니라 엑셀 파일을 주고받는 방식입니다. Dynamo는 Revit에서 사람이 실행합니다.' },
+];
+function pvBuild(real, scope){
+  const m = new Map(real), t = today();
+  const open = [...real.values()].filter(OPEN).sort((a, b) => String(a.id).localeCompare(String(b.id)));
+  for (const d of (scope === 'all' ? open : open.slice(0, 1))) {
+    const from = normSt(d.status), lg = [...(d.log || [])];
+    lg.push({ t: new Date().toISOString(), by: '', msg: `(예시) 상태 변경: ${from} → 보수 완료 · 입력: 보수 내용`, kind: 'status', from, to: '보수 완료' });
+    const rep = { ...d, status: '보수 완료', repairDate: t, repairDesc: '(예시) ' + (d.method || '보수 방법에 따라 보수'), pv: true, log: lg };
+    if (PV.stage === '검증 완료') {
+      lg.push({ t: new Date().toISOString(), by: '', msg: '(예시) 상태 변경: 보수 완료 → 검증 완료 · 입력: 검증 결과', kind: 'status', from: '보수 완료', to: '검증 완료' });
+      Object.assign(rep, { status: '검증 완료', verifyDate: t, verifyResult: '(예시) 검증 결과는 실제 점검 후 입력하는 항목입니다' });
+    }
+    m.set(d.id, rep);
+  }
+  return m;
+}
+/* 점검 가정: 예시로 보수한 하자를 원인으로 하는 남은 점검 작업을 '이상 없음'으로 본다 (화면에서만) */
+function pvInsp(defs, realInsp){
+  const m = new Map(realInsp), t = new Date().toISOString();
+  for (const d of defs.values()) {
+    if (!d.pv) continue; const dm = S.members.get(String(d.eid)); if (!dm) continue;
+    for (const x of S.members.values()) {
+      if (x.type !== dm.type || String(x.eid) === String(d.eid)) continue;
+      const k = insKey(d.id, x.eid), r = m.get(k) || (m.get(String(x.eid)) && m.get(String(x.eid)).basis === d.id ? m.get(String(x.eid)) : null);
+      if (r && !insOpen(r.status, r)) continue;
+      m.set(k, { key: k, defId: d.id, eid: String(x.eid), mark: x.mark, status: '점검 완료(이상 없음)', note: '(예시)', at: t, by: '', pv: true });
+    }
+  }
+  return m;
+}
+function pvApply(){ S.defects = pvBuild(PV.real, PV.scope); S.insp = PV.ins ? pvInsp(S.defects, PV.realInsp) : PV.realInsp; S.model = null; }
+function pvCounts(){ const kd = S.defects, ki = S.insp; S.defects = PV.real; S.insp = PV.realInsp; const c = { ...compute().cnt }; S.defects = kd; S.insp = ki; S.model = null; return c; }
+function pvStart(scope, ins){
+  if (!PV.on) { PV.real = S.defects; PV.realInsp = S.insp; }
+  PV.on = true; PV.scope = scope; if (ins !== undefined) PV.ins = ins; pvApply();
+  document.body.classList.add('pv-on'); closeDrawer(); render(); applyWriteGate();
+}
+function pvStop(){
+  if (!PV.on) return;
+  S.defects = PV.real; S.insp = PV.realInsp; PV.real = PV.realInsp = null; PV.on = false; PV.ins = false; PV.stage = '보수 완료'; S.model = null;
+  document.body.classList.remove('pv-on'); $('#mZoom').classList.remove('on'); closeDrawer(); render(); applyWriteGate();
+}
+function scroll3D(){
+  const w = $('.v3dwrap'); if (!w) return;
+  const card = w.closest('.panel') || w; const top = card.getBoundingClientRect().top + window.scrollY - 12;
+  window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+}
+function firstOpenDefect(){ return [...S.defects.values()].filter(OPEN).sort((a, b) => String(a.id).localeCompare(String(b.id)))[0]; }
+function runStep(i){
+  demo.step = i; $('#mLink').classList.remove('on');
+  if (!DEMO[i].pv) pvStop();
+  const d = firstOpenDefect();
+  if (i === 0) { location.hash = 'overview'; S.iso = null; closeDrawer(); setFloor('all'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  else if (i === 1) { location.hash = 'overview'; S.iso = null; if (d) { openDefect(d.id, { focus: true }); setTimeout(scroll3D, 120); } else toast('진행 중인 하자가 없습니다. 하자를 접수하면 이 단계를 시연할 수 있습니다'); }
+  else if (i === 2) { location.hash = 'overview'; if (d) { openDefect(d.id); setFloor('all'); S.iso = 'sim'; draw3D(); drawRoof(); setTimeout(scroll3D, 120); setTimeout(() => { const el = $('#secSim'); el && el.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 80); } else toast('진행 중인 하자가 없어 점검 대상이 없습니다'); }
+  else if (i === 3) { location.hash = 'overview'; S.iso = null; if (d) { openDefect(d.id, { focus: true }); setTimeout(scroll3D, 120); setTimeout(() => { const el = $('#secDet'); el && el.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 80); } }
+  else if (i === 4) { location.hash = 'overview'; S.iso = null; const t = d || sortedDefects()[0]; if (t) { openDefect(t.id); setTimeout(() => { const el = $('#secProc'); el && el.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 80); } }
+  else if (i === 5) { location.hash = 'overview'; S.iso = null; setFloor('all');
+    if (!(PV.on ? [...PV.real.values()] : [...S.defects.values()]).some(OPEN)) toast('진행 중인 하자가 없어 보수 예시를 보여 줄 하자가 없습니다');
+    else { pvStart(PV.on ? PV.scope : 'one'); window.scrollTo({ top: 0, behavior: 'smooth' }); } }
+  else if (i === 6) { openLink(); }
+  draw3D(); renderDemo();
+}
+function pvPanel(){
+  const a = pvCounts(), b = S.model ? S.model.cnt : compute().cnt;
+  const ids = [...S.defects.values()].filter(d => d.pv).map(d => `${d.id}(${(S.members.get(String(d.eid)) || {}).mark || d.eid})`).join(', ');
+  const n = [...PV.real.values()].filter(OPEN).length;
+  const row = (lab, k) => `<span class="pvc"><i>${lab}</i> ${a[k]} → <b>${b[k]}</b></span>`;
+  return `<div class="pvbox"><div class="pvsw"><button class="btn sm${PV.scope === 'one' ? ' navy' : ''}" data-pv="one">하자 1건 보수</button>${n > 1 ? `<button class="btn sm${PV.scope === 'all' ? ' navy' : ''}" data-pv="all">진행 중 ${n}건 모두 보수</button>` : ''}<span class="hint">가정: ${esc(ids)} → ${esc(PV.stage)}</span></div>
+    <div class="pvsw" style="margin-top:6px"><button class="btn sm${PV.stage === '보수 완료' ? ' navy' : ''}" data-pvst="보수 완료">보수 완료까지 (초록)</button><button class="btn sm${PV.stage === '검증 완료' ? ' navy' : ''}" data-pvst="검증 완료">검증 완료까지 (기본색)</button></div>
+    <label class="pvins"><input type="checkbox" data-pvins ${PV.ins ? 'checked' : ''}> 유사 부재 점검도 모두 ‘이상 없음’으로 가정</label>
+    <div class="pvrow">${row('하자 발생', 'def')}${row('유사 점검 대상', 'sim')}${row('보수 완료(검증 대기)', 'done')}${row('검증 완료', 'ver')}${row('이상 없음 확인', 'chk')}${row('등록 하자 없음', 'ok')}</div>
+    <div class="pvphoto-action"><button class="btn sm navy" data-pvphotos>보수 전·후 사진 보기</button><span class="hint">AI 재현 이미지 · 지금 가정에 포함된 하자만</span></div></div>`;
+}
+/* AI 재현 사진: 실제 하자 기록·사진 저장소(photos/photosAfter)와 분리된 시연 가이드 전용 자료. DB에 쓰지 않음 */
+const PV_PHOTOS = [
+  { id: 'HJ-2026-001', mark: 'CW-5F-03', title: '커튼월 실링 보수', src: 'assets/HJ-2026-001_before-after_AI.png', w: 1774, h: 887, note: '실링 탈락과 재실링의 외관 비교입니다. 실내 누수 원인이나 살수 시험 결과를 증명하지 않습니다.' },
+  { id: 'HJ-2026-002', mark: 'PP-N-02', title: '파라펫 방수층 보수', src: 'assets/HJ-2026-002_before-after_AI.png', w: 1752, h: 897, note: '방수층 외관 보수의 개념 비교입니다. 내부 단열재의 함수·교체·건조 상태는 사진만으로 확인할 수 없습니다.' }
+];
+function pvPhotoContent(){
+  const selected = [...S.defects.values()].filter(d => d.pv).map(d => d.id);
+  const rows = selected.map(id => PV_PHOTOS.find(p => p.id === id) || { id, missing: true });
+  if (!rows.length) return '<p>지금 가정에 포함된 하자가 없습니다.</p>';
+  return '<p class="pvphoto-note">AI 재현 이미지 · 보수 개념 설명용입니다. 실제 현장 사진, 보수 완료 또는 성능 검증의 증빙이 아닙니다.</p>' + rows.map(p => p.missing
+    ? `<figure class="pvphoto"><figcaption><b>${esc(p.id)}</b></figcaption><p class="na">이 하자에 준비된 비교 사진이 없습니다.</p></figure>`
+    : `<figure class="pvphoto"><figcaption><b>${esc(p.id)} · ${esc(p.mark)} · ${esc(p.title)}</b><span>왼쪽: 보수 전 / 오른쪽: 보수 후</span></figcaption><div class="pvimg" style="aspect-ratio:${p.w}/${p.h}"><img src="${p.src}" width="${p.w}" height="${p.h}" alt="${esc(p.title)} 보수 전후 비교, AI 재현 이미지" loading="lazy" onerror="this.parentNode.classList.add('fail');this.remove()"><span class="pvfail">이미지를 불러오지 못했습니다. 네트워크를 확인한 뒤 다시 열어 주세요.</span></div><p>${esc(p.note)}</p></figure>`
+  ).join('');
+}
+function renderDemo(){
+  const bar = $('#demoBar'); bar.classList.toggle('hidden', !demo.on); document.body.classList.toggle('demo-on', demo.on); $('#bDemo').classList.toggle('on', demo.on);
+  if (!demo.on) return;
+  const s = DEMO[demo.step];
+  bar.innerHTML = `<div class="dm-steps">${DEMO.map((x, i) => `<button class="${i === demo.step ? 'on' : ''}" data-step="${i}"><b>STEP ${i + 1}</b><span>${esc(x.t)}</span></button>`).join('')}</div>
+    <div class="dm-body"><div><b>STEP ${demo.step + 1}. ${esc(s.t)}</b><p>${esc(s.d)}</p>${s.pv && PV.on ? pvPanel() : ''}<p class="say">설명 포인트 · ${esc(s.say)}</p></div>
+    <div class="dm-nav"><button class="btn sm" data-dnav="-1" ${demo.step === 0 ? 'disabled' : ''}>◀ 이전</button><button class="btn sm navy" data-dnav="1" ${demo.step === DEMO.length - 1 ? 'disabled' : ''}>다음 ▶</button><button class="btn sm" data-dclose>닫기</button></div></div>`;
+}
+$('#demoBar').addEventListener('click', e => {
+  const st = e.target.closest('[data-step]'); if (st) { runStep(+st.dataset.step); return; }
+  const nv = e.target.closest('[data-dnav]'); if (nv) { runStep(Math.max(0, Math.min(DEMO.length - 1, demo.step + +nv.dataset.dnav))); return; }
+  const pv = e.target.closest('[data-pv]'); if (pv) { pvStart(pv.dataset.pv); renderDemo(); return; }
+  if (e.target.closest('[data-pvphotos]')) { if (!PV.on) return; $('#zT').textContent = '보수 전·후 비교 · AI 재현 이미지'; $('#zB').innerHTML = pvPhotoContent(); $('#mZoom').classList.add('on', 'pvz'); return; }
+  const ps = e.target.closest('[data-pvst]'); if (ps) { PV.stage = ps.dataset.pvst; pvStart(PV.scope); renderDemo(); return; }
+  const pi = e.target.closest('[data-pvins]'); if (pi) { pvStart(PV.scope, pi.checked); renderDemo(); return; }
+  if (e.target.closest('[data-dclose]')) { demo.on = false; pvStop(); renderDemo(); }
+});
+$('#bDemo').onclick = () => { demo.on = !demo.on; if (demo.on) runStep(0); else { pvStop(); renderDemo(); } };
+document.addEventListener('keydown', e => { if (e.shiftKey && (e.key === 'D' || e.key === 'd') && !/INPUT|TEXTAREA|SELECT/.test((e.target.tagName || '')) && S.role) { e.preventDefault(); $('#bDemo').click(); } });
+
+/* ---------- login (관리자 / 일반) ---------- */
+const PASS_HASH = 'fd68fcf88c30b4df82ec214bb6b559ede1a5d47f3b1f751524177b998bb6bbdd';
+const AUTH_KEY = 'hj-auth-v1', ROLE_KEY = 'hj-role-v1';
+async function sha256(t){ const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2,'0')).join(''); }
+const EXT = () => window.HJ_AUTH && window.HJ_AUTH.mode === 'supabase';   // 독립 사이트(Supabase) 모드
+if (EXT()) { $('#pin').classList.add('hidden'); $('#lgPwBox').classList.remove('hidden'); const d = $('#lgAdmin .d'); if (d) d.textContent = '관리자 계정 비밀번호를 입력해 주세요. 하자 등록·수정, 처리 단계 변경, 엑셀 가져오기를 할 수 있습니다.'; }
+function savedRole(){ if (EXT()) { try { if (window.HJ_AUTH.hasSession()) return 'admin'; if (sessionStorage.getItem(ROLE_KEY) === 'viewer') return 'viewer'; } catch {} return null; }
+  try { if (sessionStorage.getItem(AUTH_KEY) === PASS_HASH) return 'admin'; if (sessionStorage.getItem(ROLE_KEY) === 'viewer') return 'viewer'; } catch {} return null; }
+const pins = $$('#pin input');
+let lgMode = 'admin';
+function setLgMode(m){ lgMode = m; $$('.lgtabs button').forEach(b => b.classList.toggle('on', b.dataset.mode === m)); $('#lgAdmin').classList.toggle('hidden', m !== 'admin'); $('#lgViewer').classList.toggle('hidden', m !== 'viewer'); if (m === 'admin') setTimeout(() => (EXT() ? $('#lgPw') : pins[0]).focus(), 30); else $('#lgView').focus(); }
+$$('.lgtabs button').forEach(b => b.onclick = () => setLgMode(b.dataset.mode));
+function enter(role){
+  S.role = role;
+  try { if (role === 'admin') { sessionStorage.setItem(AUTH_KEY, PASS_HASH); sessionStorage.removeItem(ROLE_KEY); } else { sessionStorage.setItem(ROLE_KEY, 'viewer'); sessionStorage.removeItem(AUTH_KEY); } } catch {}
+  $('#login').classList.add('gone'); document.body.style.overflow = '';
+  applyWriteGate(); if (S.drawer) render();
+  if (EXT() && S.user) S.user.can('data.write').then(c => { S.canWrite = c === null || c === undefined ? null : !!c; applyWriteGate(); render(); }).catch(() => {});
+}
+function lock(){
+  if (EXT()) { try { window.HJ_AUTH.signOut(); } catch {} S.canWrite = false; }
+  S.role = null; try { sessionStorage.removeItem(AUTH_KEY); sessionStorage.removeItem(ROLE_KEY); } catch {}
+  pins.forEach(i => i.value = ''); $('#lgMsg').textContent = '';
+  $$('.modal.on').forEach(m => m.classList.remove('on')); if (S.drawer) closeDrawer();
+  $('#login').classList.remove('gone'); document.body.style.overflow = 'hidden'; setLgMode('admin'); applyWriteGate();
+}
+pins.forEach((inp, i) => {
+  inp.addEventListener('input', () => { inp.value = inp.value.replace(/\D/g, '').slice(-1); $('#pin').classList.remove('bad'); $('#lgMsg').textContent = ''; if (inp.value && i < 3) pins[i+1].focus(); if (pins.every(p => p.value)) $('#lgForm').requestSubmit(); });
+  inp.addEventListener('keydown', e => { if (e.key === 'Backspace' && !inp.value && i > 0) { pins[i-1].focus(); pins[i-1].value = ''; } });
+  inp.addEventListener('paste', e => { const t = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 4); if (!t) return; e.preventDefault(); t.split('').forEach((c, k) => pins[k].value = c); (pins[t.length] || pins[3]).focus(); if (t.length === 4) $('#lgForm').requestSubmit(); });
+});
+$('#lgForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  if (lgMode !== 'admin') { enter('viewer'); return; }
+  if (EXT()) {
+    const pw = $('#lgPw').value; if (!pw) { $('#lgMsg').textContent = '비밀번호를 입력해 주세요.'; return; }
+    $('#lgMsg').textContent = '확인 중…';
+    try { await window.HJ_AUTH.signIn(pw); $('#lgPw').value = ''; $('#lgMsg').textContent = ''; enter('admin'); }
+    catch (err) { $('#lgMsg').textContent = '비밀번호가 맞지 않거나 로그인할 수 없습니다. 다시 입력해 주세요.'; $('#lgPw').select(); }
+    return;
+  }
+  const code = pins.map(p => p.value).join('');
+  if (code.length < 4) { $('#lgMsg').textContent = '4자리를 모두 입력해 주세요.'; return; }
+  let h = ''; try { h = await sha256(code); } catch { h = ''; }
+  if (h === PASS_HASH) { $('#pin').classList.add('ok'); setTimeout(() => { enter('admin'); $('#pin').classList.remove('ok'); }, 380); }
+  else { const p = $('#pin'); p.classList.remove('bad'); void p.offsetWidth; p.classList.add('bad'); $('#lgMsg').textContent = '비밀번호가 맞지 않습니다. 다시 입력해 주세요.'; pins.forEach(x => x.value = ''); pins[0].focus(); }
+});
+$('#lgView').onclick = () => enter('viewer');
+$('#bLogout').onclick = lock;
+{ const r = savedRole(); if (r) enter(r); else { if (EXT()) { S.role = null; $('#login').classList.remove('gone'); document.body.style.overflow = 'hidden'; setLgMode('admin'); } else lock(); } }
+
+/* ---------- boot ---------- */
+async function boot(){
+  route(); render(); applyWriteGate();
+  const [db, user, assets, downloads] = await Promise.all([cap('db'), cap('user'), cap('assets'), cap('downloads')]);
+  Object.assign(S, { db, user, assets, downloads });
+  $('#bExport').classList.toggle('hidden', !downloads);
+  if (!db) { S.canWrite = false; banner(EXT() ? (window.HJ_AUTH.missing ? '아직 저장소가 설정되지 않았습니다. config.js에 Supabase 주소·키를 넣어 주세요 (README 참고).' : '하자 데이터에 연결할 수 없습니다. 네트워크와 config.js의 Supabase 주소·키를 확인해 주세요.') : '하자 데이터에 연결할 수 없습니다. claude.ai에 로그인한 상태에서 이 페이지를 열어 주세요.'); S.loadedM = S.loadedD = S.loadedI = true; render(); applyWriteGate(); return; }
+  if (user) {
+    try { S.me = await user.id(); } catch {}
+    try { const c = await user.can('data.write'); S.canWrite = c === null || c === undefined ? null : !!c; } catch { S.canWrite = null; S.canWriteErr = true; }
+  } else S.canWrite = null;
+  applyWriteGate();
+  let timer = setTimeout(() => banner('데이터를 아직 불러오지 못했습니다. 네트워크 상태를 확인해 주세요. 연결되면 자동으로 표시됩니다.'), 10000);
+  const settle = () => { if (S.loadedM && S.loadedD) { clearTimeout(timer); if (!$('#banner').dataset.empty) banner(''); } };
+  let rt = 0; const sched = () => { cancelAnimationFrame(rt); rt = requestAnimationFrame(render); };
+  db.collection('members').onSnapshot(snap => {
+    S.members = new Map(snap.docs.map(d => { const x = d.data(); return [String(x.eid || d.id), { ...x, eid: String(x.eid || d.id) }]; }));
+    if (!snap.metadata.fromCache) { S.loadedM = true; settle(); }
+    sched();
+  }, () => { S.loadedM = true; clearTimeout(timer); banner('부재 데이터를 불러오지 못했습니다. 페이지를 다시 열어 주세요.'); sched(); });
+  db.collection('defects').onSnapshot(snap => {
+    const real = new Map(snap.docs.map(d => { const x = d.data(); return [d.id, { ...x, id: d.id }]; }));
+    if (PV.on) { PV.real = real; pvApply(); } else S.defects = real;
+    if (!snap.metadata.fromCache) { S.loadedD = true; settle(); }
+    sched();
+  }, () => { S.loadedD = true; clearTimeout(timer); banner('하자 데이터를 불러오지 못했습니다. 페이지를 다시 열어 주세요.'); sched(); });
+  db.collection('inspections').onSnapshot(snap => {
+    const real = new Map(snap.docs.map(d => [d.id, d.data()]));
+    if (PV.on) { PV.realInsp = real; pvApply(); } else S.insp = real;
+    if (!snap.metadata.fromCache) S.loadedI = true;
+    sched();
+  }, () => { S.loadedI = true; });
+  db.collection('details').onSnapshot(snap => {
+    S.details = new Map(snap.docs.map(d => [d.id, d.data()]));
+    if (S.drawer) sched();
+  }, () => {});
+}
+window.addEventListener('error', e => { try { console.error('[하자관리]', e.message); } catch {} });
+boot();
+})();
+</script>
+
+<script type="module" src="viewer3d.js?v=20261105b" onerror="document.getElementById('v3dMsg').textContent='3D 모듈을 불러오지 못했습니다. 네트워크를 확인한 뒤 새로고침해 주세요.'"></script>
+<script>setTimeout(() => { if (!window.HJ3D) { const m = document.getElementById('v3dMsg'); if (m) m.textContent = '3D 모델을 불러오지 못했습니다. 새로고침해 주세요.'; } }, 12000);</script>
+</body>
+</html>
